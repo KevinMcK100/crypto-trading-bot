@@ -1,0 +1,23 @@
+{
+  "auth": "super-secure-api-key-123",
+  "ticker": "ALICEUSDT",
+  "interval": 60,
+  "side": "SELL",
+  "marginType": "ISOLATED",
+  "leverage": "2",
+  "stake": "5",
+  "risk": {
+    "portfolioRisk": "1.5",
+    "autoAdjustForRisk": true
+  },
+  "takeProfit": {
+    "splits": [20, 30, 30, 10, 10],
+    "atrMultipliers": [1.8, 2.2, 2.6, 4, 8]
+  },
+  "stopLoss": {
+    "atrMultiplier": 1.2
+  },
+  "tsActive": false,
+  "isTestPlatform": true,
+  "isDryRun": false
+}

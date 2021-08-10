@@ -1,0 +1,17 @@
+[
+  {
+    "entryPrice": 100,
+    "marginType": "isolated",
+    "isAutoAddMargin": false,
+    "isolatedMargin": 0.00000000,
+    "leverage": 10,
+    "liquidationPrice": 0,
+    "markPrice": 101,
+    "maxNotionalValue": 20000000,
+    "positionAmt": -500,
+    "symbol": "CHRUSDT",
+    "unRealizedProfit": 0.00000000,
+    "positionSide": "BOTH",
+    "updateTime": 0
+  }
+]

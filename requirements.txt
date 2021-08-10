@@ -1,0 +1,10 @@
+requests
+boto3
+chalice
+python-binance
+pandas
+ta
+ccxt
+aws_lambda_powertools
+binance_futures
+pytest

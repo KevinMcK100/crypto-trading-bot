@@ -1,0 +1,10 @@
+{
+  "FIRST_NAME": "Diamond",
+  "LAST_NAME": "Hand",
+  "EMAIL_ADDRESS": "cryptoking@gmail.com",
+  "BOT_API_KEY": "super-secure-api-key-123",
+  "BINANCE_API_KEY": "exchange-api-key-123",
+  "BINANCE_SECRET_KEY": "exchange-api-secret-123",
+  "TESTNET_API_KEY": "test-exchange-api-key-123",
+  "TESTNET_SECRET_KEY": "test-exchange-api-secret-123"
+}
