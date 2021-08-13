@@ -1,5 +1,5 @@
 import json
-
+import pandas
 from binance_f.constant.test import *
 from binance_f.exception.binanceapiexception import BinanceApiException
 from binance_f.model import Position
@@ -194,12 +194,12 @@ def webhook():
         print("JSON Validation Failed.")
         print(e)
         if should_send_email:
-            print('Sending error email to user')
+            print(f"Sending error email to user: {user_email}")
             ticker = payload.get(Constants.JsonRequestKeys.TICKER, "")
             side = payload.get(Constants.JsonRequestKeys.SIDE, "")
             emails.send_error_email(email_recipient=user_email, heading="Error placing order", err_msg=str(e),
                                     ticker=ticker, order_side=side)
-            return {"code": 400, "body": str(e)}
+        return {"code": 400, "body": str(e)}
 
     binance_client = BinanceExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
     dummy_binance = DummyBinanceExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
@@ -209,25 +209,24 @@ def webhook():
     markets = CCXTMarkets(exchange=binance())
     handler = WebhookHandler(payload=payload, exchange_client=exchange_client, constants=constants, markets=markets)
 
+    ticker = payload.get("ticker", "")
+    side = payload.get("side", "")
+
     try:
         response = handler.handle()
-
         if should_send_email:
             print('Sending order placed email to user')
             emails.send_trade_placed_email(email_recipient=user_email, trade_response=response)
-
-        return {"code": 200, "body": response}
+        return response
 
     except Exception as e:
         print("Error occurred when placing orders. ")
         print(e)
         if should_send_email:
             print('Sending error email to user')
-            ticker = payload.get("ticker", "")
-            side = payload.get("action", "")
             emails.send_error_email(email_recipient=user_email, heading="Error placing order", err_msg=str(e),
                                     ticker=ticker, order_side=side)
-            return {"code": 400, "body": str(e)}
+        return {"code": 400, "body": str(e)}
 
 
 @app.route('/exit', methods=['POST'])

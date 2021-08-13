@@ -14,8 +14,6 @@ class Leverage:
             self.client.update_leverage(leverage=self.leverage, ticker=self.ticker)
         if self.margin_type:
             self.client.update_margin_type(margin_type=self.margin_type, ticker=self.ticker)
-        self.__log()
 
-    def __log(self):
-        print('Leverage: {}x'.format(self.leverage))
-        print('Margin Type: {}x'.format(self.margin_type))
+    def __repr__(self):
+        return f"--- LEVERAGE ---      LEVERAGE: {self.leverage}x, MARGIN TYPE: {self.margin_type}"

@@ -36,18 +36,21 @@ class WebhookJsonValidator:
         self.allowed_atr_multiplier = np.arange(0.1, 1000000, 0.1)
 
     def validate_payload(self, payload: dict) -> bool:
+        print("Starting validation of JSON payload")
         is_required_fields = self.__check_required_fields(payload=payload, required_fields=self.required_fields)
-
+        print(f"Required fields present: {is_required_fields}")
         is_risk_required_fields = self.__check_required_fields(payload=payload.get(self.RISK_KEYS.RISK),
                                                                required_fields=self.risk_required_fields,
                                                                field_type=self.RISK_KEYS.RISK)
-
+        print(f"Required risk fields present: {is_risk_required_fields}")
         is_tp_required_fields = self.__check_required_fields(payload=payload.get(self.TP_KEYS.TAKE_PROFIT),
                                                              required_fields=self.tp_required_fields,
                                                              field_type=self.TP_KEYS.TAKE_PROFIT)
+        print(f"Required take profit fields present: {is_tp_required_fields}")
         is_tp_fields_valid = self.__validate_tp_fields(tp_json=payload.get(self.TP_KEYS.TAKE_PROFIT))
-
+        print(f"Take profit fields valid: {is_tp_fields_valid}")
         is_sl_required_fields = self.__check_sl_required_fields(sl_json=payload.get(self.SL_KEYS.STOP_LOSS))
+        print(f"Required stop loss fields present: {is_sl_required_fields}")
 
         return is_required_fields and is_risk_required_fields and is_tp_required_fields and is_tp_fields_valid and \
                is_sl_required_fields

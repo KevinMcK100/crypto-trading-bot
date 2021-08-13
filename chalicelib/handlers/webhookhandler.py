@@ -2,6 +2,7 @@ from chalicelib.account.account import Account
 from chalicelib.commands.cancelallopenorderscommand import CancelAllOpenOrdersCommand
 from chalicelib.commands.ordercommand import OrderCommand
 from chalicelib.constants import Constants
+from chalicelib.exceptions.positionofsamesidealreadyexists import PositionOfSameSideAlreadyExists
 from chalicelib.exceptions.risktoohighexception import RiskTooHighException
 from chalicelib.exchanges.exchangeclient import ExchangeClient
 from chalicelib.factories.positionorderfactory import PositionOrderFactory
@@ -30,16 +31,22 @@ class WebhookHandler:
         self.markets = markets
 
     def handle(self):
-        atr = ATR(markets=self.markets)
-        token = Token(exchange_client=self.exchange_client, markets=self.markets)
+        ticker = self.payload.get(self.KEYS.TICKER)
+        interval = self.payload.get(self.KEYS.INTERVAL)
+
+        atr = ATR(markets=self.markets, ticker=ticker, interval=interval)
+        print(atr)
+        token = Token(exchange_client=self.exchange_client, markets=self.markets, ticker=ticker)
+        print(token)
         account = Account(self.exchange_client)
+        print(account)
         risk = None
 
         position_orders = []
         sl_orders = []
 
-        ticker = self.payload.get(self.KEYS.TICKER)
         is_auto_adjust_for_risk = self.payload.get(self.RISK_KEYS.RISK).get(self.RISK_KEYS.AUTO_ADJUST_FOR_RISK, False)
+        print(f"Should auto adjust position based on risk: {is_auto_adjust_for_risk}")
         attempts = 0
         stake_override = None
         while attempts <= 2:
@@ -52,7 +59,7 @@ class WebhookHandler:
 
             # Risk analysis
             max_portfolio_risk = float(self.payload.get(self.RISK_KEYS.PORTFOLIO_RISK, self.DEFAULT_MAX_PORTFOLIO_RISK))
-            portfolio_value = account.get_portfolio_value()
+            portfolio_value = account.portfolio_value
             position_order = position_orders[0]
             token_qty = position_order.token_qty
             sl_trigger_price = sl_orders[0].trigger_price
@@ -60,13 +67,17 @@ class WebhookHandler:
                         max_portfolio_risk=max_portfolio_risk, token_price=position_order.token_price)
             try:
                 risk.perform_risk_analysis()
+                print("Position size within acceptable risk percentage")
                 break
             except RiskTooHighException as err:
                 print(err)
                 attempts += 1
                 if not is_auto_adjust_for_risk or attempts > 2:
+                    print("Position size exceeded maximum acceptable risk percentage. Will not place any orders")
                     raise
                 stake_override = risk.calculate_acceptable_position_size()
+                print(f"Position size exceeded maximum acceptable risk percentage. "
+                      f"Will retry with reduced position of {stake_override}%")
 
         position_qty = position_orders[0].token_qty
         tp_factory = TakeProfitOrderFactory(request=self.payload, constants=self.constants, atr=atr,
@@ -79,18 +90,19 @@ class WebhookHandler:
         # If current position and new position are of same side then don't place any orders
         cleanup_position = []
         if close_position_order is not None:
+            print("Existing position order exists. Will terminate old position before placing new orders")
             is_same_side = close_position_order.is_same_side(position_orders[0])
             if is_same_side is not None and not is_same_side:
-                return {"code": 200, "body": "Position of same side already exists"}
+                print("Position of same side already exists. Will not place any orders")
+                raise PositionOfSameSideAlreadyExists(position_side=position_orders[0].side)
             cleanup_position = [close_position_order]
 
         # Update leverage
         leverage = int(self.payload.get(self.KEYS.LEVERAGE, self.NO_LEVERAGE))
-        print('Leverage: {}x'.format(leverage))
         margin_type = str(self.payload.get(self.KEYS.MARGIN_TYPE))
-        print('Margin Type: {}x'.format(margin_type))
         leverage = Leverage(exchange_client=self.exchange_client, leverage=leverage, margin_type=margin_type,
                             ticker=ticker)
+        print(leverage)
         leverage.update_leverage_on_exchange()
 
         commands = [

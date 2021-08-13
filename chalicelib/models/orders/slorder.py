@@ -8,3 +8,5 @@ class StopLossOrder(Order):
         super().__init__(side=side, ticker=ticker, order_type="STOP_MARKET", order_id=order_id,
                          close_position=True, trigger_price=trigger_price)
 
+    def __repr__(self):
+        return f" --- STOP LOSS ORDER ---           {super().__repr__()}"

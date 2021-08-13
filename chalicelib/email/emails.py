@@ -5,7 +5,7 @@ from json import dumps
 from botocore.exceptions import ClientError
 
 AWS_REGION = "eu-west-1"
-EMAIL_SENDER = f"Trading Bot <{os.environ.get('USER_CONFIG_PATH_ENV_VAR')}>"
+EMAIL_SENDER = f"Trading Bot <{os.environ.get('SENDER_EMAIL_ADDRESS')}>"
 CHARSET = "UTF-8"
 
 

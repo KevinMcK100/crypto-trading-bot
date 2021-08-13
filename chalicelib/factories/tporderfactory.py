@@ -26,25 +26,38 @@ class TakeProfitOrderFactory(OrderFactory):
         interval = int(self.request.get(self.KEYS.INTERVAL))
         pos_side = self.request.get(self.KEYS.SIDE)
         tp_side = orderutils.flip_order_side(pos_side)
+        print(f"Take profit side: {tp_side}")
         tp_request = dict(self.request.get(self.TP_KEYS.TAKE_PROFIT))
         tp_splits = list(tp_request.get(self.TP_KEYS.SPLITS))
+        print(f"Take profit splits: {tp_splits}")
         use_limit_ord = bool(tp_request.get(self.TP_KEYS.USE_LIMIT_ORDER))
+        print(f"Take profit use limit orders: {use_limit_ord}")
         limit_atr_multipliers = list(tp_request.get(self.TP_KEYS.LIMIT_ORDER_ATR_MULTIPLIERS)) if use_limit_ord else []
-        trigger_atr_multiplier = list(tp_request.get(self.TP_KEYS.ATR_MULTIPLIERS))
+        print(f"Take profit limit price ATR multipliers: {limit_atr_multipliers}")
+        trigger_atr_multiplier = list(tp_request.get(self.TP_KEYS.ATR_MULTIPLIERS, []))
+        print(f"Take profit trigger ATR multipliers: {trigger_atr_multiplier}")
+        fixed_trigger_prices = list(tp_request.get(self.TP_KEYS.TRIGGER_PRICES, []))
+        print(f"Take profit fixed trigger prices: {fixed_trigger_prices}")
 
-        price_precision = self.token.get_price_precision(ticker=ticker)
-        qty_precision = self.token.get_qty_precision(ticker=ticker)
-        entry_price = self.token.get_current_token_price(ticker=ticker)
+        price_precision = self.token.price_precision
+        qty_precision = self.token.qty_precision
+        entry_price = self.token.token_price
+        print(f"Take profit entry price: {entry_price}")
         tp_quantities = self._split_quantities(total_qty=self.token_qty, qty_precision=qty_precision,
                                                qty_splits=tp_splits)
-        atr = self.atr.get_atr(ticker=ticker, interval=interval)
+        print(f"Take profit quantities: {tp_quantities}")
+        atr = self.atr.atr
 
         for i, exit_qty in enumerate(tp_quantities):
-            order_id = orderutils.generate_order_id(f"tp{i + 1}")
-            tp_trigger_price = self.__calculate_tp_trigger_price(atr=atr,
-                                                                 trigger_atr_multiplier=trigger_atr_multiplier[i],
-                                                                 position_entry_price=entry_price,
-                                                                 price_precision=price_precision, tp_side=pos_side)
+            normalised_idx = i + 1
+            order_id = orderutils.generate_order_id(f"tp{normalised_idx}")
+            tp_trigger_price = fixed_trigger_prices[i] if fixed_trigger_prices else \
+                self.__calculate_tp_trigger_price(atr=atr,
+                                                  trigger_atr_multiplier=trigger_atr_multiplier[i],
+                                                  position_entry_price=entry_price,
+                                                  price_precision=price_precision, tp_side=pos_side)
+            print(f"TP{normalised_idx} trigger price: {tp_trigger_price}")
+
             if use_limit_ord and i < len(limit_atr_multipliers):
                 # Create a limit order
                 # TODO: check token info and ensure trigger and stop prices are set >= allowed distance apart

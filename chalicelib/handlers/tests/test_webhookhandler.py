@@ -2,6 +2,7 @@ import unittest
 import json
 
 from chalicelib.constants import Constants
+from chalicelib.exceptions.positionofsamesidealreadyexists import PositionOfSameSideAlreadyExists
 from chalicelib.exchanges.fakebinanceexchangeclient import FakeBinanceExchangeClient
 from chalicelib.handlers.webhookhandler import WebhookHandler
 from chalicelib.markets.fakemarkets import FakeMarkets
@@ -139,19 +140,20 @@ class TestWebhookHandler(unittest.TestCase):
 
         self.exchange_client.set_positions(self.existing_position)
 
-        expected_response_code = 200
-        expected_response_body = "Position of same side already exists"
+        expected_response_code = 400
+        existing_pos_side = self.json_payload.get("side")
+        err_msg = f"Position of same side already exists. Existing position side: {existing_pos_side}"
 
         # when
-        result = self.handler.handle()
+        with self.assertRaises(PositionOfSameSideAlreadyExists) as context:
+            self.handler.handle()
 
         # then
-        placed_orders = self.exchange_client.get_placed_orders()
+        self.assertTrue(err_msg in str(context.exception))
 
         # assert no orders placed
+        placed_orders = self.exchange_client.get_placed_orders()
         self.assertEqual(0, len(placed_orders))
-        self.assertEqual(expected_response_code, result.get("code"))
-        self.assertEqual(expected_response_body, result.get("body"))
 
     def test_webhook_handler_close_existing_position(self):
         """

@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List
 
 from chalicelib import orderutils
-from chalicelib.account import Account
+from chalicelib.account.account import Account
 from chalicelib.models.orders.positionorder import PositionOrder
 from chalicelib.models.orders.slorder import StopLossOrder
 from chalicelib.models.orders.tporder import TakeProfitOrder
@@ -24,7 +24,7 @@ class ResponseBuilder:
 
     def build_response(self):
         ticker = self.payload.get("ticker")
-        price_precision = self.token.get_price_precision(ticker)
+        price_precision = self.token.price_precision
         interval = self.payload.get("interval")
         position = self.__build_position_order(price_precision=price_precision)
         stop_loss = self.__build_stop_loss_order(price_precision=price_precision)
@@ -119,7 +119,7 @@ class ResponseBuilder:
 
     def __build_risk_analysis(self):
         max_portfolio_risk = self.risk.max_portfolio_risk
-        portfolio_value = self.account.get_portfolio_value()
+        portfolio_value = self.account.portfolio_value
         portfolio_risk = self.risk.calculate_portfolio_risk()
         potential_loss = self.risk.calculate_potential_loss()
 

@@ -1,5 +1,5 @@
 from chalicelib import orderutils
-from chalicelib.account import Account
+from chalicelib.account.account import Account
 from chalicelib.constants import Constants
 from chalicelib.factories.orderfactory import OrderFactory
 from chalicelib.models.orders.positionorder import PositionOrder
@@ -24,9 +24,9 @@ class PositionOrderFactory(OrderFactory):
         stake = int(self.stake_override if self.stake_override is not None else self.request.get(self.KEYS.STAKE))
         leverage = int(self.request.get(self.KEYS.LEVERAGE))
 
-        portfolio_value = self.account.get_portfolio_value()
-        token_price = self.token.get_current_token_price(ticker=ticker)
-        qty_precision = self.token.get_qty_precision(ticker=ticker)
+        portfolio_value = self.account.portfolio_value
+        token_price = self.token.token_price
+        qty_precision = self.token.qty_precision
         position_size = self.__calculate_position_size(stake=stake, leverage=leverage, portfolio_value=portfolio_value)
         token_qty = self.__calculate_token_qty(position_size=position_size, token_price=token_price,
                                                qty_precision=qty_precision)

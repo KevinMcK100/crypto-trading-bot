@@ -8,3 +8,6 @@ class TakeProfitLimitOrder(Order):
                  limit_price: float):
         super().__init__(side=side, ticker=ticker, order_type="TAKE_PROFIT", order_id=order_id, token_qty=token_qty,
                          trigger_price=trigger_price, limit_price=limit_price, reduce_only=True)
+
+    def __repr__(self):
+        return f" --- TAKE PROFIT LIMIT ORDER ---   {super().__repr__()}"

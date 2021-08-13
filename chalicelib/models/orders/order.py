@@ -21,3 +21,7 @@ class Order(metaclass=ABCMeta):
     def is_same_side(self, other):
         return self.side == other.side
 
+    def __repr__(self):
+        return f"SIDE: {self.side}, TICKER: {self.ticker}, ORDER TYPE: {self.order_type}, ORDER ID: {self.order_id}, " \
+               f"TOKEN QUANTITY: {self.token_qty}, CLOSE POSITION: {self.close_position}, " \
+               f"TRIGGER PRICE: {self.trigger_price}, LIMIT PRICE: {self.limit_price}, REDUCE ONLY: {self.reduce_only}"

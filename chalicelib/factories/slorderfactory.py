@@ -23,20 +23,23 @@ class StopLossOrderFactory(OrderFactory):
         interval = int(self.request.get(self.KEYS.INTERVAL))
         pos_side = self.request.get(self.KEYS.SIDE)
         sl_side = orderutils.flip_order_side(pos_side)
+        print(f"Stop loss side: {sl_side}")
         sl_request = dict(self.request.get(self.SL_KEYS.STOP_LOSS))
-        trigger_price = sl_request.get(self.SL_KEYS.TRIGGER_PRICE, None)
-        atr_multiplier = sl_request.get(self.SL_KEYS.ATR_MULTIPLIER, None)
+        fixed_trigger_price = sl_request.get(self.SL_KEYS.TRIGGER_PRICE, None)
+        print(f"Stop loss fixed trigger price: {fixed_trigger_price}")
+        trigger_atr_multiplier = sl_request.get(self.SL_KEYS.ATR_MULTIPLIER, None)
+        print(f"Stop loss trigger ATR multiplier: {trigger_atr_multiplier}")
 
-        entry_price = self.token.get_current_token_price(ticker=ticker)
-        price_precision = self.token.get_price_precision(ticker=ticker)
+        entry_price = self.token.token_price
+        price_precision = self.token.price_precision
         order_id = orderutils.generate_order_id("sl")
 
-        if atr_multiplier:
-            atr = self.atr.get_atr(ticker=ticker, interval=interval)
-            trigger_distance = orderutils.calculate_atr_exit_distance(atr=atr, atr_multiplier=atr_multiplier)
-            trigger_price = orderutils.calculate_stop_loss_trigger_from_delta(entry_price=entry_price,
-                                                                              price_precision=price_precision,
-                                                                              delta=trigger_distance,
-                                                                              pos_order_side=pos_side)
+        if trigger_atr_multiplier:
+            atr = self.atr.atr
+            trigger_distance = orderutils.calculate_atr_exit_distance(atr=atr, atr_multiplier=trigger_atr_multiplier)
+            fixed_trigger_price = orderutils.calculate_stop_loss_trigger_from_delta(entry_price=entry_price,
+                                                                                    price_precision=price_precision,
+                                                                                    delta=trigger_distance,
+                                                                                    pos_order_side=pos_side)
 
-        return [StopLossOrder(side=sl_side, ticker=ticker, order_id=order_id, trigger_price=trigger_price)]
+        return [StopLossOrder(side=sl_side, ticker=ticker, order_id=order_id, trigger_price=fixed_trigger_price)]

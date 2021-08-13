@@ -2,7 +2,9 @@ from typing import List
 
 from binance_f import RequestClient
 from binance_f.exception.binanceapiexception import BinanceApiException
-from binance_f.model import FuturesMarginType, Position
+from binance_f.impl.utils import JsonWrapper
+from binance_f.model import FuturesMarginType, Position, OrderRespType
+from binance_f.model import Order as LibOrder
 
 from chalicelib.exchanges.exchangeclient import ExchangeClient
 from chalicelib.models.orders.order import Order
@@ -33,14 +35,12 @@ class BinanceExchangeClient(ExchangeClient):
         self.log()
 
     def place_order(self, order: Order):
-        print(f"Sending order to Binance: SIDE: {order.side}, TICKER: {order.ticker}, ORDER TYPE: {order.order_type}, "
-              f"ORDER ID: {order.order_id}, TOKEN QUANTITY: {order.token_qty}, CLOSE POSITION: {order.close_position}, "
-              f"TRIGGER PRICE: {order.trigger_price}, LIMIT PRICE: {order.limit_price}, "
-              f"REDUCE ONLY: {order.reduce_only}")
+        print(f"Sending order to Binance: {order}")
         return self.client.post_order(symbol=order.ticker, side=order.side, ordertype=order.order_type,
                                       quantity=order.token_qty, reduceOnly=order.reduce_only,
                                       price=order.limit_price, newClientOrderId=order.order_id,
-                                      stopPrice=order.trigger_price, closePosition=order.close_position)
+                                      stopPrice=order.trigger_price, closePosition=order.close_position,
+                                      newOrderRespType=OrderRespType.RESULT)
 
     def get_coin_info(self, ticker: str):
         res = self.client.get_exchange_information()
