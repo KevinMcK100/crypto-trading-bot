@@ -45,7 +45,8 @@ class WebhookHandler:
         position_orders = []
         sl_orders = []
 
-        is_auto_adjust_for_risk = self.payload.get(self.RISK_KEYS.RISK).get(self.RISK_KEYS.AUTO_ADJUST_FOR_RISK, False)
+        is_auto_adjust_for_risk = self.payload.get(self.RISK_KEYS.RISK, {})\
+            .get(self.RISK_KEYS.AUTO_ADJUST_FOR_RISK, False)
         print(f"Should auto adjust position based on risk: {is_auto_adjust_for_risk}")
         attempts = 0
         stake_override = None
@@ -58,7 +59,8 @@ class WebhookHandler:
             sl_orders = sl_factory.create_orders()
 
             # Risk analysis
-            max_portfolio_risk = float(self.payload.get(self.RISK_KEYS.PORTFOLIO_RISK, self.DEFAULT_MAX_PORTFOLIO_RISK))
+            max_portfolio_risk = float(self.payload.get(self.RISK_KEYS.RISK, {})
+                                       .get(self.RISK_KEYS.PORTFOLIO_RISK, self.DEFAULT_MAX_PORTFOLIO_RISK))
             portfolio_value = account.portfolio_value
             position_order = position_orders[0]
             token_qty = position_order.token_qty

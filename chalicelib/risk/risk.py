@@ -30,12 +30,11 @@ class Risk:
 
     def calculate_acceptable_position_size(self):
         max_acceptable_loss = self.portfolio_value * (self.max_portfolio_risk / 100)
+        print(f"RISK RECALCULATION: Max Acceptable Loss: {max_acceptable_loss}")
         current_loss = self.calculate_potential_loss()
+        print(f"RISK RECALCULATION: Potential Current Loss: {current_loss}")
         reduction_factor = current_loss / max_acceptable_loss
+        print(f"RISK RECALCULATION: Reduction Factor: {reduction_factor}")
         acceptable_token_qty = self.token_qty / reduction_factor
+        print(f"RISK RECALCULATION: Recalculated Token Quantity: {acceptable_token_qty}")
         return acceptable_token_qty
-
-    # def log(self):
-    #     print("Max Portfolio Risk: {}%".format(self.max_portfolio_risk))
-    #     print("Potential Loss: ${}".format(self.potential_loss))
-    #     print("Total Portfolio Risk: {}%".format(self.portfolio_risk))
