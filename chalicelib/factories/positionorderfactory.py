@@ -9,27 +9,35 @@ from chalicelib.token import Token
 class PositionOrderFactory(OrderFactory):
     KEYS = Constants.JsonRequestKeys
 
-    def __init__(self, request: dict, constants: Constants, account: Account, token: Token, stake_override=None):
+    def __init__(self, request: dict, constants: Constants, account: Account, token: Token,
+                 position_size_override=None):
         self.request = request
         self.constants = constants
         self.account = account
         self.token = token
-        self.stake_override = stake_override
+        self.position_size_override = position_size_override
 
     def create_orders(self):
         print(f"Building Position Order {self.request}")
 
         ticker = str(self.request.get(self.KEYS.TICKER))
         side = self.request.get(self.KEYS.SIDE)
-        stake = int(self.stake_override if self.stake_override is not None else self.request.get(self.KEYS.STAKE))
+        stake = int(self.request.get(self.KEYS.STAKE))
+        print(f"Position stake: {stake}")
         leverage = int(self.request.get(self.KEYS.LEVERAGE))
 
         portfolio_value = self.account.portfolio_value
         token_price = self.token.token_price
         qty_precision = self.token.qty_precision
         position_size = self.__calculate_position_size(stake=stake, leverage=leverage, portfolio_value=portfolio_value)
-        token_qty = self.__calculate_token_qty(position_size=position_size, token_price=token_price,
-                                               qty_precision=qty_precision)
+        print(f"Calculated position size: ${position_size}")
+
+        print(f"Position size override: {self.position_size_override}")
+        token_qty = self.position_size_override if self.position_size_override is not None else \
+            self.__calculate_token_qty(position_size=position_size, token_price=token_price,
+                                       qty_precision=qty_precision)
+        print(f"Calculated token quantity: {token_qty}")
+
         order_id = orderutils.generate_order_id("pos")
         return [
             PositionOrder(side=side, ticker=ticker, order_id=order_id, token_qty=token_qty, token_price=token_price)]

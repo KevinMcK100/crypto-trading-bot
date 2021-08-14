@@ -4,17 +4,17 @@
   "interval": 60,
   "side": "BUY",
   "marginType": "ISOLATED",
-  "leverage": 3,
-  "stake": 10,
+  "leverage": 5,
+  "stake": 50,
   "tsActive": false,
   "isTestPlatform": true,
   "isDryRun": false,
   "risk": {
-    "portfolioRisk": 0.1,
+    "portfolioRisk": 0.5,
     "autoAdjustForRisk": true
   },
   "stopLoss": {
-    "triggerPrice": 45
+    "atrMultiplier": 10
   },
   "takeProfit": {
     "splits": [10, 40, 50],

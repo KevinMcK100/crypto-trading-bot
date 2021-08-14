@@ -30,7 +30,7 @@ class CCXTMarkets(Markets):
     @staticmethod
     def map_interval_to_timeframe(interval: int):
         # Get the time interval the alert was triggered against
-        binance_interval = TIMEFRAME_MAPPINGS.get(interval, None)
+        binance_interval = TIMEFRAME_MAPPINGS.get(int(interval), None)
         if binance_interval is None:
             err_msg = 'Invalid time interval \'{}\'. Acceptable time intervals: {}' \
                 .format(interval, TIMEFRAME_MAPPINGS.keys())

@@ -264,7 +264,7 @@ def exit_trade():
 
     ticker = payload.get('ticker', '').upper()
     print('Ticker: {}'.format(ticker))
-    open_orders = exchange_client.get_open_orders(symbol=ticker)
+    open_orders = exchange_client.get_open_orders(ticker=ticker)
     open_position = get_open_position(exchange_client, ticker)
     open_position_amt = float(open_position.positionAmt)
     exit_alert_side = payload.get('exitSide', '').upper()

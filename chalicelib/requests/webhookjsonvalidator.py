@@ -27,7 +27,7 @@ class WebhookJsonValidator:
                                   self.TP_KEYS.TRIGGER_PRICES]
         self.sl_trigger_fields = [self.SL_KEYS.ATR_MULTIPLIER,
                                   self.SL_KEYS.TRIGGER_PRICE]
-        self.allowed_intervals = [1, 3, 5, 15, 30, 60, 120, 240]
+        self.allowed_intervals = [1, 3, 5, 15, 30, 60, 120, 240, 360, 480, 720]
         self.allowed_actions = ["BUY", "SELL"]
         self.allowed_margin_type = ["ISOLATED", "CROSS"]
         self.allowed_leverage = range(1, 125)

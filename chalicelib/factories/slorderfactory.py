@@ -20,7 +20,6 @@ class StopLossOrderFactory(OrderFactory):
     def create_orders(self):
         print(f"Building Stop Loss Order {self.request}")
         ticker = str(self.request.get(self.KEYS.TICKER))
-        interval = int(self.request.get(self.KEYS.INTERVAL))
         pos_side = self.request.get(self.KEYS.SIDE)
         sl_side = orderutils.flip_order_side(pos_side)
         print(f"Stop loss side: {sl_side}")

@@ -52,7 +52,7 @@ class WebhookHandler:
         stake_override = None
         while attempts <= 2:
             position_factory = PositionOrderFactory(request=self.payload, constants=self.constants, account=account,
-                                                    token=token, stake_override=stake_override)
+                                                    token=token, position_size_override=stake_override)
             position_orders = position_factory.create_orders()
 
             sl_factory = StopLossOrderFactory(request=self.payload, constants=self.constants, atr=atr, token=token)
@@ -79,7 +79,7 @@ class WebhookHandler:
                     raise
                 stake_override = risk.calculate_acceptable_position_size()
                 print(f"Position size exceeded maximum acceptable risk percentage. "
-                      f"Will retry with reduced position of {stake_override}%")
+                      f"Will retry with reduced position of {stake_override}")
 
         position_qty = position_orders[0].token_qty
         tp_factory = TakeProfitOrderFactory(request=self.payload, constants=self.constants, atr=atr,
