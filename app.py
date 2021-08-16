@@ -116,7 +116,7 @@ def is_exit_order(order_type: OrderType):
 def cleanup_rogue_open_orders(client: ExchangeClient, ticker: str) -> bool:
     print("Cleaning up rogue open orders on ticker: {}".format(ticker))
     open_position = get_open_position(client=client, ticker=ticker)
-    all_open_orders = client.get_open_orders(symbol=ticker)
+    all_open_orders = client.get_open_orders(ticker=ticker)
     print("Total open orders on ticker: {}".format(len(all_open_orders)))
     bot_open_orders = filter(lambda o: is_bot_order_id(o.clientOrderId), all_open_orders)
     print("Total bot placed open orders: {}".format(len(list(bot_open_orders))))
@@ -141,7 +141,7 @@ def move_stop_loss(client, ticker: str) -> bool:
     open_position = get_open_position(client=client, ticker=ticker)
     open_position_amt = float(open_position.positionAmt)
     if open_position_amt != 0:
-        open_orders = client.get_open_orders(symbol=ticker)
+        open_orders = client.get_open_orders(ticker=ticker)
         stop_loss_orders = filter(lambda o: is_stop_loss_order(o.type), open_orders)
         stop_loss_order_ids = [order.orderId for order in stop_loss_orders]
         if stop_loss_order_ids:
