@@ -1,14 +1,17 @@
 {
   "auth": "super-secure-api-key-123",
-  "ticker": "CHRUSDT",
   "interval": 60,
-  "side": "BUY",
-  "marginType": "ISOLATED",
-  "leverage": 5,
-  "stake": 50,
-  "tsActive": false,
-  "isTestPlatform": true,
+  "isTestPlatform": false,
   "isDryRun": false,
+  "position": {
+    "ticker": "CHRUSDT",
+    "side": "BUY",
+    "stake": 50,
+    "marginType": "ISOLATED",
+    "leverage": 5,
+    "dcaAtrMultipliers": [0.1, 0.3, 0.5],
+    "dcaPercentages": [20, 30, 50]
+  },
   "risk": {
     "portfolioRisk": 0.5,
     "autoAdjustForRisk": true

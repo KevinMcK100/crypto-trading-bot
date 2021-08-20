@@ -3,6 +3,7 @@ from typing import List
 
 from chalicelib import orderutils
 from chalicelib.account.account import Account
+from chalicelib.constants import Constants
 from chalicelib.models.orders.positionorder import PositionOrder
 from chalicelib.models.orders.slorder import StopLossOrder
 from chalicelib.models.orders.tporder import TakeProfitOrder
@@ -11,6 +12,9 @@ from chalicelib.token import Token
 
 
 class ResponseBuilder:
+    KEYS = Constants.JsonRequestKeys
+    TP_KEYS = KEYS.TakeProfit
+    POSITION_KEYS = KEYS.Position
 
     def __init__(self, payload: dict, position_orders: List[PositionOrder], sl_orders: List[StopLossOrder],
                  tp_orders: List[TakeProfitOrder], token: Token, risk: Risk, account: Account):
@@ -23,16 +27,17 @@ class ResponseBuilder:
         self.account = account
 
     def build_response(self):
-        ticker = self.payload.get("ticker")
+        position_json = self.payload.get(self.POSITION_KEYS.POSITION)
+        ticker = position_json.get(self.POSITION_KEYS.TICKER)
         price_precision = self.token.price_precision
-        interval = self.payload.get("interval")
+        interval = self.payload.get(self.KEYS.INTERVAL)
         position = self.__build_position_order(price_precision=price_precision)
         stop_loss = self.__build_stop_loss_order(price_precision=price_precision)
         take_profit = self.__build_take_profit_order(price_precision=price_precision)
         risk_analysis = self.__build_risk_analysis()
         leverage = self.__build_leverage()
-        is_test_platform = self.payload.get("isTestPlatform")
-        is_dry_run = self.payload.get("isDryRun")
+        is_test_platform = self.payload.get(self.KEYS.IS_TEST_PLATFORM)
+        is_dry_run = self.payload.get(self.KEYS.IS_DRY_RUN)
         return {
             "ticker": f"{ticker}",
             "interval": f"{interval}",

@@ -14,6 +14,7 @@ from chalicelib.models.orders.tporder import TakeProfitOrder
 
 class TestWebhookHandler(unittest.TestCase):
     KEYS = Constants.JsonRequestKeys
+    POSITION_KEYS = KEYS.Position
     RISK_KEYS = KEYS.Risk
     TP_KEYS = KEYS.TakeProfit
     SL_KEYS = KEYS.StopLoss
@@ -40,8 +41,9 @@ class TestWebhookHandler(unittest.TestCase):
 
     def test_webhook_handler_happy_path(self):
         # given
-        stake = self.json_payload.get(self.KEYS.STAKE)
-        leverage = self.json_payload.get(self.KEYS.LEVERAGE)
+        position_json = self.json_payload.get(self.POSITION_KEYS.POSITION)
+        stake = position_json.get(self.POSITION_KEYS.STAKE)
+        leverage = position_json.get(self.POSITION_KEYS.LEVERAGE)
         pos_size = self.PORTFOLIO_VALUE * (stake / 100) * leverage
         expected_token_quantity = pos_size / self.CURRENT_TOKEN_PRICE
         expected_response_code = 200
@@ -89,8 +91,9 @@ class TestWebhookHandler(unittest.TestCase):
                                       constants=self.constants, markets=self.fake_markets)
 
         expected_response_code = 200
-        stake = self.json_payload.get(self.KEYS.STAKE)
-        leverage = self.json_payload.get(self.KEYS.LEVERAGE)
+        position_json = self.json_payload.get(self.POSITION_KEYS.POSITION)
+        stake = position_json.get(self.POSITION_KEYS.STAKE)
+        leverage = position_json.get(self.POSITION_KEYS.LEVERAGE)
         pos_size = self.PORTFOLIO_VALUE * (stake / 100) * leverage
         original_token_quantity = pos_size / self.CURRENT_TOKEN_PRICE
 
@@ -140,7 +143,6 @@ class TestWebhookHandler(unittest.TestCase):
 
         self.exchange_client.set_positions(self.existing_position)
 
-        expected_response_code = 400
         existing_pos_side = self.json_payload.get("side")
         err_msg = f"Position of same side already exists. Existing position side: {existing_pos_side}"
 
@@ -172,8 +174,9 @@ class TestWebhookHandler(unittest.TestCase):
                                       constants=self.constants, markets=self.fake_markets)
 
         expected_response_code = 200
-        stake = self.json_payload.get(self.KEYS.STAKE)
-        leverage = self.json_payload.get(self.KEYS.LEVERAGE)
+        position_json = self.json_payload.get(self.POSITION_KEYS.POSITION)
+        stake = position_json.get(self.POSITION_KEYS.STAKE)
+        leverage = position_json.get(self.POSITION_KEYS.LEVERAGE)
         pos_size = self.PORTFOLIO_VALUE * (stake / 100) * leverage
         original_token_quantity = pos_size / self.CURRENT_TOKEN_PRICE
 

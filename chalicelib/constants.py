@@ -20,14 +20,20 @@ class Constants(metaclass=ABCMeta):
 
     class JsonRequestKeys:
         AUTH = "auth"
-        TICKER = "ticker"
         INTERVAL = "interval"
-        SIDE = "side"
-        MARGIN_TYPE = "marginType"
-        LEVERAGE = "leverage"
-        STAKE = "stake"
         IS_TEST_PLATFORM = "isTestPlatform"
         IS_DRY_RUN = "isDryRun"
+
+        class Position:
+            POSITION = "position"
+            TICKER = "ticker"
+            SIDE = "side"
+            STAKE = "stake"
+            MARGIN_TYPE = "marginType"
+            LEVERAGE = "leverage"
+            DCA_ATR_MULTIPLIERS = "dcaAtrMultipliers"
+            DCA_TRIGGER_PRICES = "dcaTriggerPrices"
+            DCA_PERCENTAGES = "dcaPercentages"
 
         class Risk:
             RISK = "risk"

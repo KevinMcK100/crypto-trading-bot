@@ -10,6 +10,7 @@ from chalicelib.token import Token
 class StopLossOrderFactory(OrderFactory):
     KEYS = Constants.JsonRequestKeys
     SL_KEYS = KEYS.StopLoss
+    POSITION_KEYS = KEYS.Position
 
     def __init__(self, request: dict, constants: Constants, atr: ATR, token: Token):
         self.request = request
@@ -19,8 +20,9 @@ class StopLossOrderFactory(OrderFactory):
 
     def create_orders(self):
         print(f"Building Stop Loss Order {self.request}")
-        ticker = str(self.request.get(self.KEYS.TICKER))
-        pos_side = self.request.get(self.KEYS.SIDE)
+        position_json = self.request.get(self.POSITION_KEYS.POSITION)
+        ticker = str(position_json.get(self.POSITION_KEYS.TICKER))
+        pos_side = position_json.get(self.POSITION_KEYS.SIDE)
         sl_side = orderutils.flip_order_side(pos_side)
         print(f"Stop loss side: {sl_side}")
         sl_request = dict(self.request.get(self.SL_KEYS.STOP_LOSS))

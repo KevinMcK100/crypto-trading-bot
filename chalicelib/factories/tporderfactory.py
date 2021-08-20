@@ -10,6 +10,7 @@ from chalicelib.token import Token
 class TakeProfitOrderFactory(OrderFactory):
     KEYS = Constants.JsonRequestKeys
     TP_KEYS = KEYS.TakeProfit
+    POSITION_KEYS = KEYS.Position
 
     def __init__(self, request: dict, constants: Constants, atr: ATR, token_qty: float, token: Token):
         self.request = request
@@ -22,9 +23,9 @@ class TakeProfitOrderFactory(OrderFactory):
         print(f"Building Take Profit Order {self.request}")
 
         tp_orders = []
-        ticker = str(self.request.get(self.KEYS.TICKER))
-        interval = int(self.request.get(self.KEYS.INTERVAL))
-        pos_side = self.request.get(self.KEYS.SIDE)
+        position_json = self.request.get(self.POSITION_KEYS.POSITION)
+        ticker = str(position_json.get(self.POSITION_KEYS.TICKER))
+        pos_side = position_json.get(self.POSITION_KEYS.SIDE)
         tp_side = orderutils.flip_order_side(pos_side)
         print(f"Take profit side: {tp_side}")
         tp_request = dict(self.request.get(self.TP_KEYS.TAKE_PROFIT))

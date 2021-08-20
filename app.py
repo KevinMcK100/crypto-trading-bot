@@ -185,6 +185,8 @@ def webhook():
     print('Is running on testnet platform: {}. Is dry run: {}'.format(is_test_platform, is_dry_run))
 
     should_send_email = user_email is not None and not is_dry_run
+    ticker = payload.get(Constants.JsonRequestKeys.Position.TICKER, "")
+    side = payload.get(Constants.JsonRequestKeys.Position.SIDE, "")
 
     # Validate JSON payload
     try:
@@ -195,8 +197,6 @@ def webhook():
         print(e)
         if should_send_email:
             print(f"Sending error email to user: {user_email}")
-            ticker = payload.get(Constants.JsonRequestKeys.TICKER, "")
-            side = payload.get(Constants.JsonRequestKeys.SIDE, "")
             emails.send_error_email(email_recipient=user_email, heading="Error placing order", err_msg=str(e),
                                     ticker=ticker, order_side=side)
         return {"code": 400, "body": str(e)}
@@ -208,9 +208,6 @@ def webhook():
     constants = Constants()
     markets = CCXTMarkets(exchange=binance())
     handler = WebhookHandler(payload=payload, exchange_client=exchange_client, constants=constants, markets=markets)
-
-    ticker = payload.get("ticker", "")
-    side = payload.get("side", "")
 
     try:
         response = handler.handle()

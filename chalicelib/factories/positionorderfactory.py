@@ -8,6 +8,7 @@ from chalicelib.token import Token
 
 class PositionOrderFactory(OrderFactory):
     KEYS = Constants.JsonRequestKeys
+    POSITION_KEYS = KEYS.Position
 
     def __init__(self, request: dict, constants: Constants, account: Account, token: Token,
                  position_size_override=None):
@@ -20,11 +21,12 @@ class PositionOrderFactory(OrderFactory):
     def create_orders(self):
         print(f"Building Position Order {self.request}")
 
-        ticker = str(self.request.get(self.KEYS.TICKER))
-        side = self.request.get(self.KEYS.SIDE)
-        stake = int(self.request.get(self.KEYS.STAKE))
+        position_json = self.request.get(self.POSITION_KEYS.POSITION)
+        ticker = str(position_json.get(self.POSITION_KEYS.TICKER))
+        side = position_json.get(self.POSITION_KEYS.SIDE)
+        stake = int(position_json.get(self.POSITION_KEYS.STAKE))
         print(f"Position stake: {stake}")
-        leverage = int(self.request.get(self.KEYS.LEVERAGE))
+        leverage = int(position_json.get(self.POSITION_KEYS.LEVERAGE))
 
         portfolio_value = self.account.portfolio_value
         token_price = self.token.token_price

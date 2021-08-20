@@ -23,6 +23,7 @@ class WebhookHandler:
     NO_LEVERAGE = 1
     KEYS = Constants.JsonRequestKeys
     RISK_KEYS = KEYS.Risk
+    POSITION_KEYS = KEYS.Position
 
     def __init__(self, payload: dict, exchange_client: ExchangeClient, constants: Constants, markets: Markets):
         self.payload = payload
@@ -31,7 +32,8 @@ class WebhookHandler:
         self.markets = markets
 
     def handle(self):
-        ticker = self.payload.get(self.KEYS.TICKER)
+        position_json = self.payload.get(self.POSITION_KEYS.POSITION)
+        ticker = position_json.get(self.POSITION_KEYS.TICKER)
         interval = self.payload.get(self.KEYS.INTERVAL)
 
         atr = ATR(markets=self.markets, ticker=ticker, interval=interval)
@@ -100,8 +102,8 @@ class WebhookHandler:
             cleanup_position = [close_position_order]
 
         # Update leverage
-        leverage = int(self.payload.get(self.KEYS.LEVERAGE, self.NO_LEVERAGE))
-        margin_type = str(self.payload.get(self.KEYS.MARGIN_TYPE))
+        leverage = int(position_json.get(self.POSITION_KEYS.LEVERAGE, self.NO_LEVERAGE))
+        margin_type = str(position_json.get(self.POSITION_KEYS.MARGIN_TYPE))
         leverage = Leverage(exchange_client=self.exchange_client, leverage=leverage, margin_type=margin_type,
                             ticker=ticker)
         print(leverage)
