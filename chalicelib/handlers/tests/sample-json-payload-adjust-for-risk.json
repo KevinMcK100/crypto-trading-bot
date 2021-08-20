@@ -7,7 +7,7 @@
   "leverage": 5,
   "stake": 50,
   "tsActive": false,
-  "isTestPlatform": true,
+  "isTestPlatform": false,
   "isDryRun": false,
   "risk": {
     "portfolioRisk": 0.5,
