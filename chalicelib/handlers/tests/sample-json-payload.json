@@ -13,10 +13,11 @@
     "dcaPercentages": [20, 30, 50]
   },
   "risk": {
-    "portfolioRisk": 0.1
+    "portfolioRisk": 2,
+    "autoAdjustForRisk": false
   },
   "stopLoss": {
-      "atrMultiplier": 1.2
+    "atrMultiplier": 1.2
   },
   "takeProfit": {
     "splits": [10, 40, 50],

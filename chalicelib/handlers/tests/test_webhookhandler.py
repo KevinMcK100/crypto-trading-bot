@@ -19,6 +19,8 @@ class TestWebhookHandler(unittest.TestCase):
     TP_KEYS = KEYS.TakeProfit
     SL_KEYS = KEYS.StopLoss
     CURRENT_TOKEN_PRICE = 100
+    TOKEN_PRICE_PRECISION = 4
+    TOKEN_PRICE_QUANTITY = 4
     PORTFOLIO_VALUE = 1000
     json_payload = {}
     ohlcv_data = []
@@ -31,6 +33,8 @@ class TestWebhookHandler(unittest.TestCase):
 
         self.exchange_client = FakeBinanceExchangeClient()
         self.exchange_client.set_portfolio_value(self.PORTFOLIO_VALUE)
+        self.exchange_client.set_price_precision(self.TOKEN_PRICE_PRECISION)
+        self.exchange_client.set_quantity_precision(self.TOKEN_PRICE_QUANTITY)
 
         self.constants = Constants()
         self.fake_markets = FakeMarkets()
@@ -134,7 +138,7 @@ class TestWebhookHandler(unittest.TestCase):
         Test when existing position is same side as new position then no orders get placed.
         """
         # given
-        with open("sample-json-payload-adjust-for-risk.json") as sample_payload:
+        with open("sample-json-payload.json") as sample_payload:
             self.json_payload = json.load(sample_payload)
         with open("sample-ohlcv.json") as sample_ohlcv:
             self.ohlcv_data = json.load(sample_ohlcv)
@@ -162,7 +166,7 @@ class TestWebhookHandler(unittest.TestCase):
         Test when existing position is in place it gets cancelled before new position is entered.
         """
         # given
-        with open("sample-json-payload-adjust-for-risk.json") as sample_payload:
+        with open("sample-json-payload.json") as sample_payload:
             self.json_payload = json.load(sample_payload)
         with open("sample-ohlcv.json") as sample_ohlcv:
             self.ohlcv_data = json.load(sample_ohlcv)
@@ -205,7 +209,7 @@ class TestWebhookHandler(unittest.TestCase):
         self.assertEqual(Constants.OrderSide.BUY, pos_order.side)
         self.assertFalse(pos_order.close_position)
         self.assertEqual("MARKET", pos_order.order_type)
-        self.assertLess(pos_order.token_qty, original_token_quantity)
+        self.assertEqual(pos_order.token_qty, original_token_quantity)
 
         # assert stop loss orders
         sl_orders = [order for order in placed_orders if isinstance(order, StopLossOrder)]
@@ -229,7 +233,7 @@ class TestWebhookHandler(unittest.TestCase):
 
     def test_webhook_handler_cancel_existing_open_orders(self):
         """
-        Test when existing open orders are in place all bot placed orders are cancelled before new position is entered.
+        Test when open orders are in place, all bot placed orders are cancelled before new position is entered.
         """
         # given
         with open("sample-json-btc-bot-order.json") as open_orders:
