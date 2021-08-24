@@ -51,7 +51,7 @@ class TakeProfitOrderFactory(OrderFactory):
 
         for i, exit_qty in enumerate(tp_quantities):
             normalised_idx = i + 1
-            order_id = orderutils.generate_order_id(f"tp{normalised_idx}")
+            order_id_str = f"tp{normalised_idx}"
             tp_trigger_price = fixed_trigger_prices[i] if fixed_trigger_prices else \
                 self.__calculate_tp_trigger_price(atr=atr,
                                                   trigger_atr_multiplier=trigger_atr_multiplier[i],
@@ -66,13 +66,13 @@ class TakeProfitOrderFactory(OrderFactory):
                                                                  position_entry_price=entry_price,
                                                                  price_precision=price_precision, tp_side=pos_side)
 
-                tp_orders.append(TakeProfitLimitOrder(side=tp_side, ticker=ticker, order_id=order_id,
+                tp_orders.append(TakeProfitLimitOrder(side=tp_side, ticker=ticker, order_id_str=order_id_str,
                                                       token_qty=exit_qty, trigger_price=tp_trigger_price,
                                                       limit_price=tp_limit_price))
             else:
                 # Create a market order
-                tp_orders.append(TakeProfitOrder(side=tp_side, ticker=ticker, order_id=order_id, token_qty=exit_qty,
-                                                 trigger_price=tp_trigger_price))
+                tp_orders.append(TakeProfitOrder(side=tp_side, ticker=ticker, order_id_str=order_id_str,
+                                                 token_qty=exit_qty, trigger_price=tp_trigger_price))
         return tp_orders
 
     @staticmethod

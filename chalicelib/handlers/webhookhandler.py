@@ -54,7 +54,7 @@ class WebhookHandler:
         stake_override = None
         while attempts <= 2:
             position_factory = PositionOrderFactory(request=self.payload, constants=self.constants, account=account,
-                                                    token=token, position_size_override=stake_override)
+                                                    token=token, atr=atr, position_size_override=stake_override)
             position_orders = position_factory.create_orders()
 
             sl_factory = StopLossOrderFactory(request=self.payload, constants=self.constants, atr=atr, token=token)
@@ -64,11 +64,11 @@ class WebhookHandler:
             max_portfolio_risk = float(self.payload.get(self.RISK_KEYS.RISK, {})
                                        .get(self.RISK_KEYS.PORTFOLIO_RISK, self.DEFAULT_MAX_PORTFOLIO_RISK))
             portfolio_value = account.portfolio_value
-            position_order = position_orders[0]
-            token_qty = position_order.token_qty
+            token_qty = sum([order.token_qty for order in position_orders])
+            average_entry_price = sum([order.entry_price * (order.token_qty / token_qty) for order in position_orders])
             sl_trigger_price = sl_orders[0].trigger_price
             risk = Risk(token_qty=token_qty, sl_trigger_price=sl_trigger_price, portfolio_value=portfolio_value,
-                        max_portfolio_risk=max_portfolio_risk, token_price=position_order.token_price)
+                        max_portfolio_risk=max_portfolio_risk, token_price=average_entry_price)
             try:
                 risk.perform_risk_analysis()
                 print("Position size within acceptable risk percentage")
@@ -83,7 +83,7 @@ class WebhookHandler:
                 print(f"Position size exceeded maximum acceptable risk percentage. "
                       f"Will retry with reduced position of {stake_override}")
 
-        position_qty = position_orders[0].token_qty
+        position_qty = sum([order.token_qty for order in position_orders])
         tp_factory = TakeProfitOrderFactory(request=self.payload, constants=self.constants, atr=atr,
                                             token_qty=position_qty, token=token)
         tp_orders = tp_factory.create_orders()

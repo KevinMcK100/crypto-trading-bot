@@ -74,10 +74,10 @@ class WebhookJsonValidator:
         has_dca_splits = bool(dca_splits)
         # If either one of DCA splits or DCA triggers are present then both must be present
         if (dca_trigger_fields_count == 1 and not has_dca_splits) or (dca_trigger_fields_count == 0 and has_dca_splits):
-            raise TypeError(f"Found DCA fields in '{self.POSITION_KEYS.POSITION}' JSON payload. "
-                            f"You must specify either '{self.POSITION_KEYS.DCA_ATR_MULTIPLIERS}' or "
-                            f"{self.POSITION_KEYS.DCA_TRIGGER_PRICES} along with {self.POSITION_KEYS.DCA_PERCENTAGES} "
-                            f"in order to construct a valid DCA position request")
+            raise ValueError(f"Found DCA fields in '{self.POSITION_KEYS.POSITION}' JSON payload. "
+                             f"You must specify either '{self.POSITION_KEYS.DCA_ATR_MULTIPLIERS}' or "
+                             f"{self.POSITION_KEYS.DCA_TRIGGER_PRICES} along with {self.POSITION_KEYS.DCA_PERCENTAGES} "
+                             f"in order to construct a valid DCA position request")
 
         if dca_trigger_fields_count == 1 and has_dca_splits:
             # Get the DCA trigger field key present in the request
@@ -90,22 +90,22 @@ class WebhookJsonValidator:
             # Any DCA ATR trigger values or raw trigger values on a SELL position side, must be in ascending order
             if atr_multipliers or (raw_trigger_prices and position_side.upper() == 'SELL'):
                 if sorted(trigger_values) != trigger_values:
-                    raise TypeError(
+                    raise ValueError(
                         f"Trigger values in '{self.POSITION_KEYS.POSITION}' JSON payload must be in ascending order. "
                         f"Trigger values: {trigger_values}")
             elif raw_trigger_prices and position_side.upper() == 'BUY':
                 if sorted(trigger_values, reverse=True) != trigger_values:
-                    raise TypeError(
+                    raise ValueError(
                         f"Trigger values in '{self.POSITION_KEYS.POSITION}' JSON payload must be in descending order. "
                         f"Trigger values: {trigger_values}")
 
             # Ensure lists are of the same length (must have a split percentage for each ATR multiplier)
             if len(trigger_values) != len(dca_splits):
-                raise TypeError(f"Number of trigger values in '{self.POSITION_KEYS.POSITION}' JSON payload must match "
-                                f"number of splits. Trigger values: {trigger_values} Splits: {dca_splits}")
+                raise ValueError(f"Number of trigger values in '{self.POSITION_KEYS.POSITION}' JSON payload must match "
+                                 f"number of splits. Trigger values: {trigger_values} Splits: {dca_splits}")
             # As splits are percentage values, their total must sum to 100
             if sum(dca_splits) != 100:
-                raise TypeError(
+                raise ValueError(
                     f"Sum of all DCA percentage split values in '{self.POSITION_KEYS.POSITION}' JSON must equal 100. "
                     f"Splits: {dca_splits}")
         return True
@@ -124,25 +124,26 @@ class WebhookJsonValidator:
         if atr_multipliers or (raw_trigger_prices and position_side.upper() == 'BUY'):
             # Any ATR trigger values raw trigger values on a BUY position must be in ascending order
             if sorted(trigger_values) != trigger_values:
-                raise TypeError(
+                raise ValueError(
                     f"Trigger values in '{self.TP_KEYS.TAKE_PROFIT}' JSON payload must be in ascending order. "
                     f"Trigger values: {trigger_values}")
         elif raw_trigger_prices and position_side.upper() == 'SELL':
             # Any raw trigger values on a SELL position must be in descending order
             if sorted(trigger_values, reverse=True) != trigger_values:
-                raise TypeError(
+                raise ValueError(
                     f"Trigger values in '{self.TP_KEYS.TAKE_PROFIT}' JSON payload must be in descending order. "
                     f"Trigger values: {trigger_values}")
 
         tp_splits = tp_json.get("splits")
         # Ensure lists are of the same length (must have a split percentage for each ATR multiplier)
         if len(trigger_values) != len(tp_splits):
-            raise TypeError(f"Number of trigger values in '{self.TP_KEYS.TAKE_PROFIT}' JSON payload must match number "
-                            f"of splits. Trigger values: {trigger_values} Splits: {tp_splits}")
+            raise ValueError(f"Number of trigger values in '{self.TP_KEYS.TAKE_PROFIT}' JSON payload must match number "
+                             f"of splits. Trigger values: {trigger_values} Splits: {tp_splits}")
         # As splits are percentage values, their total must sum to 100
         if sum(tp_splits) != 100:
-            raise TypeError(f"Sum of all take profit split values in '{self.TP_KEYS.TAKE_PROFIT}' JSON must equal 100. "
-                            f"Splits: {tp_splits}")
+            raise ValueError(
+                f"Sum of all take profit split values in '{self.TP_KEYS.TAKE_PROFIT}' JSON must equal 100. "
+                f"Splits: {tp_splits}")
         return True
 
     def __check_sl_required_fields(self, sl_json):
@@ -156,7 +157,7 @@ class WebhookJsonValidator:
         for field in required_fields:
             if payload.get(field) is None:
                 field_type = " field '" + field_type + "'" if field_type else ""
-                raise TypeError(f"JSON payload{field_type} is missing required field '{field}'")
+                raise ValueError(f"JSON payload{field_type} is missing required field '{field}'")
         return True
 
     @staticmethod
@@ -167,7 +168,7 @@ class WebhookJsonValidator:
             if field in json:
                 field_count += 1
         if field_count != 1:
-            raise TypeError(f"JSON payload field '{field_id}' must contain only one of {fields}")
+            raise ValueError(f"JSON payload field '{field_id}' must contain only one of {fields}")
         return True
 
     @staticmethod
@@ -178,5 +179,5 @@ class WebhookJsonValidator:
             if field in json:
                 field_count += 1
         if field_count > 1:
-            raise TypeError(f"JSON payload field '{field_id}' must contain only zero or one of {fields}")
+            raise ValueError(f"JSON payload field '{field_id}' must contain only zero or one of {fields}")
         return field_count

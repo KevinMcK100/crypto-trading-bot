@@ -28,5 +28,4 @@ class PositionTerminator:
             amt_to_close = abs(position_amt)
             print(f"Attempting to close open position of side {position_side} for amount {amt_to_close}")
             flipped_side = orderutils.flip_order_side(order_side=position_side)
-            order_id = orderutils.generate_order_id("exit")
-            return ClosePositionOrder(side=flipped_side, ticker=ticker, order_id=order_id, token_qty=amt_to_close)
+            return ClosePositionOrder(side=flipped_side, ticker=ticker, order_id_str="exit", token_qty=amt_to_close)

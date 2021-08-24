@@ -24,7 +24,7 @@ BOT_API_KEY_CONFIG_KEY = 'BOT_API_KEY'
 
 USER_ID_QUERY_PARAM = 'userId'
 ORDER_ID_PREFIX = "bot_"
-IS_TEST_EXCHANGE = {"BINANCE": False, "TESTNET": True}
+EXCHANGES = {"BINANCE": False, "TESTNET": True}
 
 app = Chalice(app_name='crypto-trading-bot')
 
@@ -123,11 +123,11 @@ def cleanup_rogue_open_orders(client: ExchangeClient, ticker: str) -> bool:
 
     # Do not terminate open orders if there is a potential position waiting to get filled.
     # We only want to cancel exit type orders (SL, TP and TS).
-    open_exit_orders = filter(lambda o: is_exit_order(o.type), bot_open_orders)
-    print("Total exit type open orders to cancel: {}".format(len(list(open_exit_orders))))
+    # open_exit_orders = filter(lambda o: is_exit_order(o.type), bot_open_orders)
+    # print("Total exit type open orders to cancel: {}".format(len(list(open_exit_orders))))
 
     open_position_amt = float(open_position.positionAmt)
-    if open_position_amt == 0 and open_exit_orders:
+    if open_position_amt == 0:
         return cancel_all_open_orders(client=client, ticker=ticker)
     return False
 
@@ -192,7 +192,7 @@ def webhook():
     try:
         json_validator = WebhookJsonValidator()
         json_validator.validate_payload(payload=payload)
-    except TypeError as e:
+    except ValueError as e:
         print("JSON Validation Failed.")
         print(e)
         if should_send_email:
@@ -389,15 +389,14 @@ def order_update_event():
     print("Order: {}".format(order))
 
     exchange = payload.get("exchange")
-    if exchange not in IS_TEST_EXCHANGE:
+    if exchange not in EXCHANGES:
         return {
             'code': 400,
-            'message': 'Request must include "exchange" property. Valid exchanges: {}'.format(IS_TEST_EXCHANGE.keys())
+            'message': 'Request must include "exchange" property. Valid exchanges: {}'.format(EXCHANGES.keys())
         }
 
-    is_test_exchange = IS_TEST_EXCHANGE.get(exchange)
+    is_test_exchange = EXCHANGES.get(exchange)
     print("Is from test exchange: {}".format(is_test_exchange))
-    # binance_client = Binance(is_test_platform=is_test_exchange, user_config=user_config)
     binance_client = BinanceExchangeClient(is_test_platform=is_test_exchange, user_config=user_config)
     dummy_binance = DummyBinanceExchangeClient(is_test_platform=is_test_exchange, user_config=user_config)
     exchange_client = dummy_binance if payload.get("isDryRun") else binance_client
@@ -405,9 +404,7 @@ def order_update_event():
     ticker = order.get("s")
     is_orders_cancelled = cleanup_rogue_open_orders(client=exchange_client, ticker=ticker)
     order_type = str(order.get("ot"))
-    # TODO: Add this condition back in when decided if it's FILLED or PARTIALLY_FILLED on first TP
-    # order_status = str(order.get("X"))
-    # and (order_status.upper() == "FILLED")
+
     is_stop_loss_moved = False
     if ("PROFIT" in order_type.upper()) and (not is_orders_cancelled):
         print("Take profit order filled. Will attempt to move Stop Loss")

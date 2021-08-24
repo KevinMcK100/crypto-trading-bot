@@ -1,4 +1,5 @@
 import pandas as pd
+from abc import ABCMeta
 from ta.volatility import AverageTrueRange
 
 from chalicelib.markets.markets import Markets
@@ -6,7 +7,7 @@ from chalicelib.markets.markets import Markets
 DEFAULT_ATR_LENGTH = 14
 
 
-class ATR:
+class ATR(metaclass=ABCMeta):
 
     def __init__(self, markets: Markets, ticker: str, interval: int, atr_length=DEFAULT_ATR_LENGTH):
         self.ticker = ticker

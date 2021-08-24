@@ -37,10 +37,10 @@ class BinanceExchangeClient(ExchangeClient):
     def place_order(self, order: Order):
         print(f"Sending order to Binance: {order}")
         return self.client.post_order(symbol=order.ticker, side=order.side, ordertype=order.order_type,
-                                      quantity=order.token_qty, reduceOnly=order.reduce_only,
-                                      price=order.limit_price, newClientOrderId=order.order_id,
-                                      stopPrice=order.trigger_price, closePosition=order.close_position,
-                                      newOrderRespType=OrderRespType.RESULT)
+                                      timeInForce=order.time_in_force, quantity=order.token_qty,
+                                      reduceOnly=order.reduce_only, price=order.limit_price,
+                                      newClientOrderId=order.order_id,stopPrice=order.trigger_price,
+                                      closePosition=order.close_position, newOrderRespType=OrderRespType.RESULT)
 
     def get_coin_info(self, ticker: str):
         res = self.client.get_exchange_information()

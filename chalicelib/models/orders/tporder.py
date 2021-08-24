@@ -4,8 +4,9 @@ from chalicelib.models.orders.order import Order
 
 class TakeProfitOrder(Order):
 
-    def __init__(self, side: Constants.OrderSide, ticker: str, order_id: str, token_qty: float, trigger_price: float):
-        super().__init__(side=side, ticker=ticker, order_type="TAKE_PROFIT_MARKET", order_id=order_id,
+    def __init__(self, side: Constants.OrderSide, ticker: str, order_id_str: str, token_qty: float,
+                 trigger_price: float):
+        super().__init__(side=side, ticker=ticker, order_type="TAKE_PROFIT_MARKET", order_id_str=order_id_str,
                          token_qty=token_qty, trigger_price=trigger_price, reduce_only=True)
 
     def __repr__(self):

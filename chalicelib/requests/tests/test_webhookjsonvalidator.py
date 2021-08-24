@@ -50,7 +50,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_json)
 
         # then
@@ -68,7 +68,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_json)
 
         # then
@@ -86,7 +86,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_json)
 
         # then
@@ -104,7 +104,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_json)
 
         # then
@@ -122,7 +122,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_json)
 
         # then
@@ -140,7 +140,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_json)
 
         # then
@@ -158,7 +158,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_json)
 
         # then
@@ -180,7 +180,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_dca_json)
 
         # then
@@ -198,7 +198,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_dca_json)
 
         # then
@@ -216,7 +216,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_dca_json)
 
         # then
@@ -236,7 +236,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_dca_json)
 
         # then
@@ -275,7 +275,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_dca_json)
 
         # then
@@ -296,7 +296,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_dca_json)
 
         # then
@@ -327,7 +327,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_dca_json)
 
         # then
@@ -355,7 +355,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_dca_json)
 
         # then
@@ -378,7 +378,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_dca_json)
 
         # then
@@ -404,7 +404,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_dca_json)
 
         # then
@@ -426,7 +426,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
                   f"splits. Trigger values: {invalid_trigger_values} Splits: {tp_splits}"
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_tp_json)
 
         # then
@@ -446,7 +446,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         f"Splits: {invalid_splits_values}"
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_tp_json)
 
         # then
@@ -468,7 +468,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_risk_json)
 
         # then
@@ -491,7 +491,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         validator = WebhookJsonValidator()
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_tp_json)
 
         # then
@@ -510,7 +510,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         invalid_tp_json.get(self.TP_KEYS.TAKE_PROFIT).pop(missing_field)
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_tp_json)
 
         # then
@@ -569,7 +569,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         invalid_tp_json.get(self.TP_KEYS.TAKE_PROFIT).update({self.TP_KEYS.TRIGGER_PRICES: [100, 150, 200, 300, 400]})
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_tp_json)
 
         # then
@@ -591,7 +591,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         invalid_tp_json.get(self.POSITION_KEYS.POSITION).update({self.POSITION_KEYS.SIDE: "BUY"})
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_tp_json)
 
         # then
@@ -610,7 +610,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         invalid_tp_json.get(self.TP_KEYS.TAKE_PROFIT).update({self.TP_KEYS.ATR_MULTIPLIERS: invalid_trigger_values})
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_tp_json)
 
         # then
@@ -635,7 +635,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         invalid_tp_json.get(self.POSITION_KEYS.POSITION).update({self.POSITION_KEYS.SIDE: "BUY"})
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_tp_json)
 
         # then
@@ -657,7 +657,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         invalid_tp_json.get(self.TP_KEYS.TAKE_PROFIT).pop(self.TP_KEYS.ATR_MULTIPLIERS)
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_tp_json)
 
         # then
@@ -678,7 +678,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
                   f" Trigger values: {invalid_trigger_values} Splits: {tp_splits}"
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_tp_json)
 
         # then
@@ -697,7 +697,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
                   f"Splits: {invalid_splits_values}"
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_tp_json)
 
         # then
@@ -718,7 +718,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         invalid_sl_json[self.SL_KEYS.STOP_LOSS] = {"invalidField": 5}
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_sl_json)
 
         # then
@@ -752,7 +752,7 @@ class WebhookJsonValidatorTest(unittest.TestCase):
         invalid_sl_json.get(self.SL_KEYS.STOP_LOSS).update({self.SL_KEYS.TRIGGER_PRICE: 1000})
 
         # when
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(ValueError) as context:
             validator.validate_payload(payload=invalid_sl_json)
 
         # then

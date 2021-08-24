@@ -18,6 +18,13 @@ class Constants(metaclass=ABCMeta):
         TRAILING_STOP_MARKET = "TRAILING_STOP_MARKET"
         INVALID = None
 
+    class TimeInForce:
+        GTC = "GTC"
+        IOC = "IOC"
+        FOK = "FOK"
+        GTX = "GTX"
+        INVALID = None
+
     class JsonRequestKeys:
         AUTH = "auth"
         INTERVAL = "interval"

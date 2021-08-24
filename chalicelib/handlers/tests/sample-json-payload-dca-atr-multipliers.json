@@ -6,16 +6,18 @@
   "position": {
     "ticker": "CHRUSDT",
     "side": "BUY",
-    "stake": 50,
+    "stake": 10,
     "marginType": "ISOLATED",
-    "leverage": 5
+    "leverage": 3,
+    "dcaAtrMultipliers": [0.1, 0.2, 0.5],
+    "dcaPercentages": [20, 30, 50]
   },
   "risk": {
-    "portfolioRisk": 0.5,
-    "autoAdjustForRisk": true
+    "portfolioRisk": 2,
+    "autoAdjustForRisk": false
   },
   "stopLoss": {
-    "atrMultiplier": 10
+    "atrMultiplier": 1.2
   },
   "takeProfit": {
     "splits": [10, 40, 50],

@@ -4,7 +4,7 @@ from typing import List
 from chalicelib import orderutils
 from chalicelib.account.account import Account
 from chalicelib.constants import Constants
-from chalicelib.models.orders.positionorder import PositionOrder
+from chalicelib.models.orders.positionmarketorder import PositionMarketOrder
 from chalicelib.models.orders.slorder import StopLossOrder
 from chalicelib.models.orders.tporder import TakeProfitOrder
 from chalicelib.risk.risk import Risk
@@ -16,7 +16,7 @@ class ResponseBuilder:
     TP_KEYS = KEYS.TakeProfit
     POSITION_KEYS = KEYS.Position
 
-    def __init__(self, payload: dict, position_orders: List[PositionOrder], sl_orders: List[StopLossOrder],
+    def __init__(self, payload: dict, position_orders: List[PositionMarketOrder], sl_orders: List[StopLossOrder],
                  tp_orders: List[TakeProfitOrder], token: Token, risk: Risk, account: Account):
         self.payload = payload
         self.position_orders = position_orders
@@ -55,10 +55,10 @@ class ResponseBuilder:
         total_size = 0
         total_tokens = 0
         position_orders = []
-        entry_price = self.position_orders[0].token_price
+        entry_price = self.position_orders[0].curr_token_price
 
         for order in self.position_orders:
-            pos_size = order.token_qty * order.token_price
+            pos_size = order.token_qty * order.entry_price
             position_order = {
                 "size": f"${pos_size:.2f}",
                 "tokenQty": f"{order.token_qty}"

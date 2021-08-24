@@ -33,7 +33,6 @@ class StopLossOrderFactory(OrderFactory):
 
         entry_price = self.token.token_price
         price_precision = self.token.price_precision
-        order_id = orderutils.generate_order_id("sl")
 
         if trigger_atr_multiplier:
             atr = self.atr.atr
@@ -43,4 +42,4 @@ class StopLossOrderFactory(OrderFactory):
                                                                                     delta=trigger_distance,
                                                                                     pos_order_side=pos_side)
 
-        return [StopLossOrder(side=sl_side, ticker=ticker, order_id=order_id, trigger_price=fixed_trigger_price)]
+        return [StopLossOrder(side=sl_side, ticker=ticker, order_id_str="sl", trigger_price=fixed_trigger_price)]
