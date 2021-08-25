@@ -56,21 +56,23 @@ class ResponseBuilder:
         total_size = 0
         total_tokens = 0
         position_orders = []
-        entry_price = self.position_orders[0].curr_token_price
 
         for order in self.position_orders:
             pos_size = order.token_qty * order.entry_price
             position_order = {
                 "size": f"${pos_size:.2f}",
-                "tokenQty": f"{order.token_qty}"
+                "tokenQty": f"{order.token_qty}",
+                "entryPrice": f"${order.entry_price}"
             }
             position_orders.append(position_order)
             total_size += pos_size
             total_tokens += order.token_qty
 
+        avg_entry_price = sum([order.entry_price * (order.token_qty / total_tokens) for order in self.position_orders])
+
         position = {
             "side": str(first_pos_order.side),
-            "entryPrice": "${:.{prec}f}".format(entry_price, prec=price_precision),
+            "avgEntryPrice": "${:.{prec}f}".format(avg_entry_price, prec=price_precision),
             "totalSize": f"${total_size:.2f}",
             "totalTokenQty": "{:.{prec}f}".format(total_tokens, prec=qty_precision),
         }
