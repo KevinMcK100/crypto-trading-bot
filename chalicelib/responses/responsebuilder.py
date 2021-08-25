@@ -30,12 +30,13 @@ class ResponseBuilder:
         position_json = self.payload.get(self.POSITION_KEYS.POSITION)
         ticker = position_json.get(self.POSITION_KEYS.TICKER)
         price_precision = self.token.price_precision
+        qty_precision = self.token.qty_precision
         interval = self.payload.get(self.KEYS.INTERVAL)
-        position = self.__build_position_order(price_precision=price_precision)
+        position = self.__build_position_order(price_precision=price_precision, qty_precision=qty_precision)
         stop_loss = self.__build_stop_loss_order(price_precision=price_precision)
         take_profit = self.__build_take_profit_order(price_precision=price_precision)
         risk_analysis = self.__build_risk_analysis()
-        leverage = self.__build_leverage()
+        leverage = self.__build_leverage(position_json=position_json)
         is_test_platform = self.payload.get(self.KEYS.IS_TEST_PLATFORM)
         is_dry_run = self.payload.get(self.KEYS.IS_DRY_RUN)
         return {
@@ -50,7 +51,7 @@ class ResponseBuilder:
             "isDryRun": is_dry_run
         }
 
-    def __build_position_order(self, price_precision: int):
+    def __build_position_order(self, price_precision: int, qty_precision: int):
         first_pos_order = self.position_orders[0]
         total_size = 0
         total_tokens = 0
@@ -71,7 +72,7 @@ class ResponseBuilder:
             "side": str(first_pos_order.side),
             "entryPrice": "${:.{prec}f}".format(entry_price, prec=price_precision),
             "totalSize": f"${total_size:.2f}",
-            "totalTokenQty": f"{total_tokens}",
+            "totalTokenQty": "{:.{prec}f}".format(total_tokens, prec=qty_precision),
         }
 
         if len(self.position_orders) > 1:
@@ -135,9 +136,9 @@ class ResponseBuilder:
             "potentialLoss": f"${potential_loss:.2f}",
         }
 
-    def __build_leverage(self):
-        leverage = self.payload.get("leverage")
-        margin_type = self.payload.get("marginType")
+    def __build_leverage(self, position_json: dict):
+        leverage = position_json.get("leverage")
+        margin_type = position_json.get("marginType")
         return {
             "leverage": f"{leverage}x",
             "marginType": f"{margin_type}"
