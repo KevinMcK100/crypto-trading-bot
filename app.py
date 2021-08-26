@@ -102,8 +102,7 @@ def cancel_open_position(client: ExchangeClient, ticker: str, open_position: Pos
         #                       newClientOrderId=utils.generate_client_order_id())
         # else:
         print('Cancelling open position... Executing STOP_MARKET order')
-        order_id = orderutils.generate_order_id()
-        stop_order = StopLossOrder(side=flipped_side, ticker=ticker, order_id=order_id, trigger_price=token_price)
+        stop_order = StopLossOrder(side=flipped_side, ticker=ticker, order_id_str="pos_exit", trigger_price=token_price)
         client.place_order(stop_order)
         return True
     return False
@@ -123,12 +122,14 @@ def cleanup_rogue_open_orders(client: ExchangeClient, ticker: str) -> bool:
 
     # Do not terminate open orders if there is a potential position waiting to get filled.
     # We only want to cancel exit type orders (SL, TP and TS).
-    # open_exit_orders = filter(lambda o: is_exit_order(o.type), bot_open_orders)
+    open_exit_orders = filter(lambda o: is_exit_order(o.type), bot_open_orders)
     # print("Total exit type open orders to cancel: {}".format(len(list(open_exit_orders))))
 
     open_position_amt = float(open_position.positionAmt)
+    print(f"Position amount: {open_position_amt}")
     if open_position_amt == 0:
         return cancel_all_open_orders(client=client, ticker=ticker)
+    print("No open orders to cancel")
     return False
 
 
@@ -140,10 +141,13 @@ def move_stop_loss(client, ticker: str) -> bool:
     print("Attempting to move stop loss")
     open_position = get_open_position(client=client, ticker=ticker)
     open_position_amt = float(open_position.positionAmt)
+    print(f"Open position amount: {open_position_amt}")
     if open_position_amt != 0:
         open_orders = client.get_open_orders(ticker=ticker)
+        print(f"All open orders count: {len(open_orders)}")
         stop_loss_orders = filter(lambda o: is_stop_loss_order(o.type), open_orders)
         stop_loss_order_ids = [order.orderId for order in stop_loss_orders]
+        print(f"All Stop Loss orders to cancel: {stop_loss_order_ids}")
         if stop_loss_order_ids:
             print("Cancelling Stop Loss orders: {}".format(stop_loss_order_ids))
             client.cancel_list_orders(ticker, stop_loss_order_ids)
@@ -152,8 +156,8 @@ def move_stop_loss(client, ticker: str) -> bool:
             price_precision = client.get_price_precision(ticker=ticker)
             sl_trigger = round(sl_trigger, price_precision)
             print("Placing new {} Stop Loss order at: {}".format(stop_loss_side, sl_trigger))
-            order_id = orderutils.generate_order_id()
-            stop_order = StopLossOrder(side=stop_loss_side, ticker=ticker, order_id=order_id, trigger_price=sl_trigger)
+            stop_order = StopLossOrder(side=stop_loss_side, ticker=ticker, order_id_str="sl_mv",
+                                       trigger_price=sl_trigger)
             client.place_order(stop_order)
             return True
     return False
