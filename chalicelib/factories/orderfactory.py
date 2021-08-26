@@ -15,7 +15,8 @@ class OrderFactory(metaclass=ABCMeta):
             split_multiplier = split / 100
             qty = round(total_qty * split_multiplier, qty_precision)
             qty_remaining -= qty
-            splits.append(qty)
+            if qty > 0:
+                splits.append(qty)
         # Last part should be what ever remains to ensure we close out exact position amount
         splits.append(round(qty_remaining, qty_precision))
         return splits

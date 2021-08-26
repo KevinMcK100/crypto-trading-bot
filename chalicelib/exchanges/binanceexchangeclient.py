@@ -1,10 +1,12 @@
+from math import log
 from typing import List
 
 from binance_f import RequestClient
 from binance_f.exception.binanceapiexception import BinanceApiException
 from binance_f.impl.utils import JsonWrapper
-from binance_f.model import FuturesMarginType, Position, OrderRespType
+from binance_f.model import FuturesMarginType, Position, OrderRespType, ExchangeInformation
 from binance_f.model import Order as LibOrder
+from binance_f.model.exchangeinformation import Symbol
 
 from chalicelib.exchanges.exchangeclient import ExchangeClient
 from chalicelib.models.orders.order import Order
@@ -15,6 +17,15 @@ BINANCE_API_BASE_URL = "https://fapi.binance.com"
 TESTNET_BASE_URL = "https://testnet.binancefuture.com"
 TESTNET_API_KEY_CONFIG_KEY = 'TESTNET_API_KEY'
 TESTNET_SECRET_KEY_CONFIG_KEY = 'TESTNET_SECRET_KEY'
+FILTER_TYPE = "filterType"
+PRICE_FILTER = "PRICE_FILTER"
+TICK_SIZE = "tickSize"
+
+
+def get_symbol_filter(symbol: Symbol, filter_type: str):
+    return next(
+        _filter for _filter in symbol.filters if _filter[FILTER_TYPE] == filter_type
+    )
 
 
 class BinanceExchangeClient(ExchangeClient):
@@ -42,25 +53,24 @@ class BinanceExchangeClient(ExchangeClient):
                                       newClientOrderId=order.order_id,stopPrice=order.trigger_price,
                                       closePosition=order.close_position, newOrderRespType=OrderRespType.RESULT)
 
-    def get_coin_info(self, ticker: str):
-        res = self.client.get_exchange_information()
-        for item in res.symbols:
-            if item.symbol == ticker.upper():
-                return item
-        return None
+    def get_symbol_info(self, ticker: str):
+        exchange_info = self.client.get_exchange_information()
+        return next(sym for sym in exchange_info.symbols if sym.symbol == ticker.upper())
 
     def get_quantity_precision(self, ticker: str) -> int:
         quantity_precision = None
-        coin_info = self.get_coin_info(ticker=ticker)
+        coin_info = self.get_symbol_info(ticker=ticker)
         if coin_info is not None:
             quantity_precision = coin_info.quantityPrecision
         return quantity_precision
 
     def get_price_precision(self, ticker: str) -> int:
         price_precision = None
-        coin_info = self.get_coin_info(ticker=ticker)
-        if coin_info is not None:
-            price_precision = coin_info.pricePrecision
+        exchange_info: Symbol = self.get_symbol_info(ticker=ticker)
+        if exchange_info is not None:
+            price_filter = get_symbol_filter(symbol=exchange_info, filter_type=PRICE_FILTER)
+            tick_size = float(price_filter[TICK_SIZE])
+            price_precision = int(round(-log(tick_size, 10), 0))
         return price_precision
 
     def update_margin_type(self, margin_type: str, ticker: str):

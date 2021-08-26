@@ -49,6 +49,9 @@ class PositionOrderFactory(OrderFactory):
             self.__calculate_token_qty(position_size=position_size, token_price=token_price,
                                        qty_precision=qty_precision)
         print(f"Calculated token quantity: {token_qty}")
+        if token_qty <= 0:
+            raise ValueError(f"Position size of ${position_size} is not enough to buy any tokens at the current price "
+                             f"of ${token_price} given the required quantity precision of {qty_precision}")
 
         if dca_percentages:
             # Build DCA LIMIT position orders
@@ -81,7 +84,7 @@ class PositionOrderFactory(OrderFactory):
 
     def __build_market_order(self, side: Constants.OrderSide, ticker: str, token_qty: float, token_price: float):
         return [
-            PositionMarketOrder(side=side, ticker=ticker, order_id_str="pos", token_qty=token_qty,
+            PositionMarketOrder(side=side, ticker=ticker, order_id_str="pos_mkt", token_qty=token_qty,
                                 curr_token_price=token_price, entry_price=token_price)
         ]
 

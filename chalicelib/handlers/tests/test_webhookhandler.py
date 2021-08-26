@@ -10,7 +10,7 @@ from chalicelib.models.orders.closepositionorder import ClosePositionOrder
 from chalicelib.models.orders.positiondcaorder import PositionDCAOrder
 from chalicelib.models.orders.positionmarketorder import PositionMarketOrder
 from chalicelib.models.orders.slorder import StopLossOrder
-from chalicelib.models.orders.tporder import TakeProfitOrder
+from chalicelib.models.orders.tpmarketorder import TakeProfitMarketOrder
 
 
 class TestWebhookHandler(unittest.TestCase):
@@ -83,7 +83,7 @@ class TestWebhookHandler(unittest.TestCase):
         self.assertEqual(Constants.OrderSide.SELL, sl_order.side)
         self.assertEqual("STOP_MARKET", sl_order.order_type)
 
-        tp_orders = [order for order in placed_orders if isinstance(order, TakeProfitOrder)]
+        tp_orders = [order for order in placed_orders if isinstance(order, TakeProfitMarketOrder)]
         self.assertEqual(len(tp_orders), 3)
         tp_quantity = 0
         for tp_order in tp_orders:
@@ -139,7 +139,7 @@ class TestWebhookHandler(unittest.TestCase):
         self.assertEqual(Constants.OrderSide.SELL, sl_order.side)
         self.assertEqual("STOP_MARKET", sl_order.order_type)
 
-        tp_orders = [order for order in placed_orders if isinstance(order, TakeProfitOrder)]
+        tp_orders = [order for order in placed_orders if isinstance(order, TakeProfitMarketOrder)]
         self.assertEqual(len(tp_orders), 3)
         tp_quantity = 0
         for tp_order in tp_orders:
@@ -231,7 +231,7 @@ class TestWebhookHandler(unittest.TestCase):
         self.assertEqual("STOP_MARKET", sl_order.order_type)
 
         # assert take profit orders
-        tp_orders = [order for order in placed_orders if isinstance(order, TakeProfitOrder)]
+        tp_orders = [order for order in placed_orders if isinstance(order, TakeProfitMarketOrder)]
         self.assertEqual(len(tp_orders), 3)
         tp_quantity = 0
         for tp_order in tp_orders:
@@ -334,7 +334,7 @@ class TestWebhookHandler(unittest.TestCase):
         self.assertEqual(Constants.OrderSide.SELL, sl_order.side)
         self.assertEqual("STOP_MARKET", sl_order.order_type)
 
-        tp_orders = [order for order in placed_orders if isinstance(order, TakeProfitOrder)]
+        tp_orders = [order for order in placed_orders if isinstance(order, TakeProfitMarketOrder)]
         self.assertEqual(len(tp_orders), 3)
         tp_quantity = 0
         for tp_order in tp_orders:
@@ -400,7 +400,7 @@ class TestWebhookHandler(unittest.TestCase):
         self.assertEqual(Constants.OrderSide.BUY, sl_order.side)
         self.assertEqual("STOP_MARKET", sl_order.order_type)
 
-        tp_orders = [order for order in placed_orders if isinstance(order, TakeProfitOrder)]
+        tp_orders = [order for order in placed_orders if isinstance(order, TakeProfitMarketOrder)]
         self.assertEqual(len(tp_orders), 3)
         tp_quantity = 0
         for tp_order in tp_orders:

@@ -3,7 +3,7 @@ from chalicelib.constants import Constants
 from chalicelib.factories.orderfactory import OrderFactory
 from chalicelib.indicators.atr import ATR
 from chalicelib.models.orders.tplimitorder import TakeProfitLimitOrder
-from chalicelib.models.orders.tporder import TakeProfitOrder
+from chalicelib.models.orders.tpmarketorder import TakeProfitMarketOrder
 from chalicelib.token import Token
 
 
@@ -51,7 +51,8 @@ class TakeProfitOrderFactory(OrderFactory):
 
         for i, exit_qty in enumerate(tp_quantities):
             normalised_idx = i + 1
-            order_id_str = f"tp{normalised_idx}"
+            order_id_prexif = f"tp{normalised_idx}"
+            tp_split = tp_splits[i]
             tp_trigger_price = fixed_trigger_prices[i] if fixed_trigger_prices else \
                 self.__calculate_tp_trigger_price(atr=atr,
                                                   trigger_atr_multiplier=trigger_atr_multiplier[i],
@@ -65,14 +66,16 @@ class TakeProfitOrderFactory(OrderFactory):
                 tp_limit_price = self.__calculate_tp_limit_price(atr=atr, limit_atr_multiplier=limit_atr_multipliers[i],
                                                                  position_entry_price=entry_price,
                                                                  price_precision=price_precision, tp_side=pos_side)
-
-                tp_orders.append(TakeProfitLimitOrder(side=tp_side, ticker=ticker, order_id_str=order_id_str,
+                order_id_prexif += "_lmt"
+                tp_orders.append(TakeProfitLimitOrder(side=tp_side, ticker=ticker, order_id_str=order_id_prexif,
                                                       token_qty=exit_qty, trigger_price=tp_trigger_price,
-                                                      limit_price=tp_limit_price))
+                                                      limit_price=tp_limit_price, exit_percentage=tp_split))
             else:
                 # Create a market order
-                tp_orders.append(TakeProfitOrder(side=tp_side, ticker=ticker, order_id_str=order_id_str,
-                                                 token_qty=exit_qty, trigger_price=tp_trigger_price))
+                order_id_prexif += "_mkt"
+                tp_orders.append(TakeProfitMarketOrder(side=tp_side, ticker=ticker, order_id_str=order_id_prexif,
+                                                       token_qty=exit_qty, trigger_price=tp_trigger_price,
+                                                       exit_percentage=tp_split))
         return tp_orders
 
     @staticmethod

@@ -25,6 +25,14 @@ class ResponseBuilder:
         self.token = token
         self.risk = risk
         self.account = account
+        self.total_pos_size = 0
+        self.total_tokens = 0
+        for order in self.position_orders:
+            pos_size = order.token_qty * order.entry_price
+            self.total_pos_size += pos_size
+            self.total_tokens += order.token_qty
+        self.avg_entry_price = sum([order.entry_price * (order.token_qty / self.total_tokens)
+                                    for order in self.position_orders])
 
     def build_response(self):
         position_json = self.payload.get(self.POSITION_KEYS.POSITION)
@@ -68,11 +76,10 @@ class ResponseBuilder:
             total_size += pos_size
             total_tokens += order.token_qty
 
-        avg_entry_price = sum([order.entry_price * (order.token_qty / total_tokens) for order in self.position_orders])
-
         position = {
             "side": str(first_pos_order.side),
-            "avgEntryPrice": "${:.{prec}f}".format(avg_entry_price, prec=price_precision),
+            "currentTokenPrice": "${:.{prec}f}".format(first_pos_order.curr_token_price, prec=price_precision),
+            "avgEntryPrice": "${:.{prec}f}".format(self.avg_entry_price, prec=price_precision),
             "totalSize": f"${total_size:.2f}",
             "totalTokenQty": "{:.{prec}f}".format(total_tokens, prec=qty_precision),
         }
@@ -85,14 +92,16 @@ class ResponseBuilder:
     def __build_stop_loss_order(self, price_precision: int):
         sl_order = self.sl_order[0]
         trigger_price = sl_order.trigger_price
+        potential_loss = self.risk.calculate_potential_loss()
+        percentage_loss = round((potential_loss / self.total_pos_size) * 100, 2)
         return {
             "triggerPrice": "${:.{prec}f}".format(trigger_price, prec=price_precision),
-            "percentDistance": "TODO"
+            "potentialLoss": f"${potential_loss:.2f}",
+            "lossOnPosition": f"{percentage_loss}%",
         }
 
     def __build_take_profit_order(self, price_precision: int):
         token_price = self.token.token_price
-        first_tp_order = self.tp_orders[0]
         total_size = 0
         total_tokens = 0
         total_potential_gain = 0
@@ -103,25 +112,28 @@ class ResponseBuilder:
             token_qty = order.token_qty
             trigger_price = order.trigger_price
             potential_gain = orderutils.calculate_gain_loss(token_qty=token_qty, exit_price=trigger_price,
-                                                            entry_price=token_price)
+                                                            entry_price=self.avg_entry_price)
+            percentage_gain = round((potential_gain / self.total_pos_size) * 100, 2)
+            exit_percentage = order.exit_percentage
             tp_order = {
                 "size": f"${tp_size:.2f}",
                 "tokens": f"{token_qty}",
                 "triggerPrice": "${:.{prec}f}".format(trigger_price, prec=price_precision),
                 "potentialGain": f"${potential_gain:.2f}",
-                "splitPercentage": "TODO",
-                "percentDistance": "TODO",
+                "gainOnPosition": f"{percentage_gain}%",
+                "positionExitPercentage": f"{exit_percentage}%",
             }
             tp_orders.append(tp_order)
             total_size += tp_size
             total_tokens += order.token_qty
             total_potential_gain += potential_gain
 
+        total_percentage_gain = round((total_potential_gain / self.total_pos_size) * 100, 2)
         return {
-            "side": str(first_tp_order.side),
             "totalSize": f"${total_size:.2f}",
             "totalTokenQty": f"{total_tokens}",
             "totalPotentialGain": f"${total_potential_gain:.2f}",
+            "totalGainOnPosition": f"{total_percentage_gain}%",
             "orders": tp_orders
         }
 
