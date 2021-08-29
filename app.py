@@ -24,6 +24,7 @@ BOT_API_KEY_CONFIG_KEY = 'BOT_API_KEY'
 
 USER_ID_QUERY_PARAM = 'userId'
 ORDER_ID_PREFIX = "bot_"
+EXIT_ORDER_ID_PREFIX = "bot_exit_"
 EXCHANGES = {"BINANCE": False, "TESTNET": True}
 
 app = Chalice(app_name='crypto-trading-bot')
@@ -59,6 +60,10 @@ def authenticate_user(api_key, payload):
 
 def is_bot_order_id(order_id: str):
     return order_id.startswith(ORDER_ID_PREFIX)
+
+
+def is_bot_exit_order_id(order_id: str):
+    return order_id.startswith(EXIT_ORDER_ID_PREFIX)
 
 
 def cancel_all_open_orders(client: ExchangeClient, ticker):
@@ -405,10 +410,16 @@ def order_update_event():
     dummy_binance = DummyBinanceExchangeClient(is_test_platform=is_test_exchange, user_config=user_config)
     exchange_client = dummy_binance if payload.get("isDryRun") else binance_client
 
+    is_orders_cancelled = False
     ticker = order.get("s")
-    is_orders_cancelled = cleanup_rogue_open_orders(client=exchange_client, ticker=ticker)
-    order_type = str(order.get("ot"))
+    order_id = order.get("c", "")
+    # When flipping from one side to another we place an order with ID prefix "bot_exit_" to exit the old position.
+    # We must avoid cleaning up open orders on this order type, otherwise new DCA open orders for new side will
+    # instantly be cancelled.
+    if not is_bot_exit_order_id(order_id=order_id):
+        is_orders_cancelled = cleanup_rogue_open_orders(client=exchange_client, ticker=ticker)
 
+    order_type = str(order.get("ot"))
     is_stop_loss_moved = False
     if ("PROFIT" in order_type.upper()) and (not is_orders_cancelled):
         print("Take profit order filled. Will attempt to move Stop Loss")
@@ -421,6 +432,8 @@ def order_update_event():
                 "body": err.args
             }
 
+    print(f"Open orders cancelled: {is_orders_cancelled}")
+    print(f"Stop Loss moved: {is_stop_loss_moved}")
     return {
         "code": 200,
         "body": "Successfully processed request. Open orders cancelled: {}. Stop Loss moved: {}".format(
