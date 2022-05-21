@@ -13,7 +13,7 @@ class Leverage:
         if self.leverage:
             self.client.update_leverage(leverage=self.leverage, ticker=self.ticker)
         if self.margin_type:
-            self.client.update_margin_type(margin_type=self.margin_type, ticker=self.ticker)
+            self.client.update_margin_type(margin_type=self.margin_type, ticker=self.ticker, leverage=self.leverage)
 
     def __repr__(self):
         return f"--- LEVERAGE ---      LEVERAGE: {self.leverage}x, MARGIN TYPE: {self.margin_type}"

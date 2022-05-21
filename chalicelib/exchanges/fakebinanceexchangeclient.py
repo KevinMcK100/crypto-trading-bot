@@ -1,11 +1,12 @@
 from typing import List
 
 from binance_f.impl.utils import JsonWrapper
-from binance_f.model import Position
+from binance_f.model import Position as LibPosition
 from binance_f.model import Order as LibOrder
 
 from chalicelib.exchanges.exchangeclient import ExchangeClient
 from chalicelib.models.orders.order import Order as BotOrder
+from chalicelib.models.positions.position import Position
 
 
 class FakeBinanceExchangeClient(ExchangeClient):
@@ -34,14 +35,18 @@ class FakeBinanceExchangeClient(ExchangeClient):
                 return order
         return None
 
-    def set_positions(self, positions: List[Position]):
+    def set_positions(self, positions: List[LibPosition]):
         for position_json in positions:
             json_wrapper = JsonWrapper(position_json)
             position = Position().json_parse(json_wrapper)
             self.position.append(position)
 
-    def get_position(self) -> List[Position]:
-        return self.position
+    def get_position_for_ticker(self, ticker: str) -> Position:
+        open_positions = self.position
+        for open_position in open_positions:
+            if open_position.symbol == ticker.upper():
+                return Position(open_position.positionAmt, open_position.entryPrice)
+        return None
 
     def set_open_orders(self, open_orders: List[LibOrder]):
         for open_order in open_orders:
@@ -49,7 +54,7 @@ class FakeBinanceExchangeClient(ExchangeClient):
             open_order = LibOrder().json_parse(json_wrapper)
             self.open_orders.append(open_order)
 
-    def get_open_orders(self, ticker: str) -> List[LibOrder]:
+    def get_open_orders(self, ticker: str):
         # Binance filters results by ticker so we assume open_orders contains only for specified ticker
         return self.open_orders
 

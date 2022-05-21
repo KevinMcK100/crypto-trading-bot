@@ -57,7 +57,9 @@ class WebhookHandler:
                                                     token=token, atr=atr, position_size_override=stake_override)
             position_orders = position_factory.create_orders()
 
-            sl_factory = StopLossOrderFactory(request=self.payload, constants=self.constants, atr=atr, token=token)
+            position_qty = sum([order.token_qty for order in position_orders])
+            sl_factory = StopLossOrderFactory(request=self.payload, constants=self.constants, atr=atr, token=token,
+                                              token_qty=position_qty)
             sl_orders = sl_factory.create_orders()
 
             # Risk analysis
@@ -100,6 +102,8 @@ class WebhookHandler:
                 print("Position of same side already exists. Will not place any orders")
                 raise PositionOfSameSideAlreadyExists(position_side=position_orders[0].side)
             cleanup_position = [close_position_order]
+        else:
+            print("NO OPEN POSITION TO CLOSE")
 
         # Update leverage
         leverage = int(position_json.get(self.POSITION_KEYS.LEVERAGE, self.NO_LEVERAGE))
@@ -112,14 +116,25 @@ class WebhookHandler:
         commands = [
             CancelAllOpenOrdersCommand(exchange=self.exchange_client, ticker=ticker),
             OrderCommand(exchange=self.exchange_client, orders=cleanup_position),
-            OrderCommand(exchange=self.exchange_client, orders=position_orders),
-            OrderCommand(exchange=self.exchange_client, orders=sl_orders),
-            OrderCommand(exchange=self.exchange_client, orders=tp_orders),
+            # OrderCommand(exchange=self.exchange_client, orders=position_orders),
+            # OrderCommand(exchange=self.exchange_client, orders=sl_orders),
+            # OrderCommand(exchange=self.exchange_client, orders=tp_orders),
         ]
 
         invoker = OrderInvoker()
         invoker.set_commands(commands)
         invoker.execute_orders()
+
+        pos_tp_sl_order = {
+            "symbol": token.ticker,
+            "side": position_orders[0].side,
+            "price": position_orders[0].limit_price,
+            "qty": position_qty,
+            "order_link_id": position_orders[0].order_id,
+            "take_profit": tp_orders[0].trigger_price,
+            "stop_loss": sl_orders[0].trigger_price
+        }
+        self.exchange_client.place_pos_sl_tp_order(pos_tp_sl_order)
 
         response_builder = ResponseBuilder(payload=self.payload, position_orders=position_orders, sl_orders=sl_orders,
                                            tp_orders=tp_orders, token=token, risk=risk, account=account)

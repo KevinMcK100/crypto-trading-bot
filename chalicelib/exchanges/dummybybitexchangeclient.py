@@ -1,8 +1,8 @@
-from chalicelib.exchanges.binanceexchangeclient import BinanceExchangeClient
+from chalicelib.exchanges.bybitexchangeclient import BybitExchangeClient
 from chalicelib.models.orders.order import Order
 
 
-class DummyBinanceExchangeClient(BinanceExchangeClient):
+class DummyBybitExchangeClient(BybitExchangeClient):
 
     def place_order(self, order: Order):
         print(f"Dry Run! Would have sent order: {order}")

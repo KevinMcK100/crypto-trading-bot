@@ -12,11 +12,12 @@ class StopLossOrderFactory(OrderFactory):
     SL_KEYS = KEYS.StopLoss
     POSITION_KEYS = KEYS.Position
 
-    def __init__(self, request: dict, constants: Constants, atr: ATR, token: Token):
+    def __init__(self, request: dict, constants: Constants, atr: ATR, token: Token, token_qty: float):
         self.request = request
         self.constants = constants
         self.atr = atr
         self.token = token
+        self.token_qty = token_qty
 
     def create_orders(self):
         print(f"Building Stop Loss Order {self.request}")
@@ -32,14 +33,14 @@ class StopLossOrderFactory(OrderFactory):
         print(f"Stop loss trigger ATR multiplier: {trigger_atr_multiplier}")
 
         entry_price = self.token.token_price
-        price_precision = self.token.price_precision
 
         if trigger_atr_multiplier:
             atr = self.atr.atr
             trigger_distance = orderutils.calculate_atr_exit_distance(atr=atr, atr_multiplier=trigger_atr_multiplier)
             fixed_trigger_price = orderutils.calculate_stop_loss_trigger_from_delta(entry_price=entry_price,
-                                                                                    price_precision=price_precision,
+                                                                                    token=self.token,
                                                                                     delta=trigger_distance,
                                                                                     pos_order_side=pos_side)
 
-        return [StopLossOrder(side=sl_side, ticker=ticker, order_id_str="sl", trigger_price=fixed_trigger_price)]
+        return [StopLossOrder(side=sl_side, ticker=ticker, order_id_str="sl", trigger_price=fixed_trigger_price,
+                              token_qty=self.token_qty)]

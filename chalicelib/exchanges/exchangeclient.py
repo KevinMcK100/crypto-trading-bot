@@ -1,16 +1,19 @@
 from abc import ABCMeta, abstractmethod
-from typing import List
+from typing import List, Dict
 
-from binance_f.model import Position
-from binance_f.model import Order as LibOrder
-
+from chalicelib.models.orders.openorder import OpenOrder
 from chalicelib.models.orders.order import Order
+from chalicelib.models.positions.position import Position
 
 
 class ExchangeClient(metaclass=ABCMeta):
 
     @abstractmethod
     def place_order(self, order: Order):
+        pass
+
+    @abstractmethod
+    def place_pos_sl_tp_order(self, order: Dict):
         pass
 
     @abstractmethod
@@ -26,7 +29,7 @@ class ExchangeClient(metaclass=ABCMeta):
         pass
 
     @staticmethod
-    def update_margin_type(self, margin_type: str, ticker: str):
+    def update_margin_type(self, margin_type: str, ticker: str, leverage: int):
         pass
 
     @abstractmethod
@@ -34,11 +37,11 @@ class ExchangeClient(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_position(self) -> List[Position]:
+    def get_position_for_ticker(self, ticker: str) -> Position:
         pass
 
     @abstractmethod
-    def get_open_orders(self, ticker: str) -> List[LibOrder]:
+    def get_open_orders(self, ticker: str) -> List[OpenOrder]:
         pass
 
     @abstractmethod

@@ -2,6 +2,7 @@ import random
 import string
 
 from chalicelib.constants import Constants
+from chalicelib.token import Token
 
 
 def generate_order_id(msg=""):
@@ -25,16 +26,16 @@ def calculate_atr_exit_distance(atr: float, atr_multiplier: float) -> float:
     return atr * atr_multiplier
 
 
-def calculate_profit_trigger_from_delta(entry_price: float, price_precision: int, delta: float,
+def calculate_profit_trigger_from_delta(entry_price: float, token: Token, delta: float,
                                         tp_order_side: Constants.OrderSide):
     trigger_price = (entry_price + delta) if tp_order_side == Constants.OrderSide.BUY else (entry_price - delta)
-    return round(trigger_price, price_precision)
+    return token.round_price_to_precision(trigger_price)
 
 
-def calculate_stop_loss_trigger_from_delta(entry_price: float, price_precision: int, delta: float,
+def calculate_stop_loss_trigger_from_delta(entry_price: float, token: Token, delta: float,
                                            pos_order_side: Constants.OrderSide):
     trigger_price = (entry_price - delta) if pos_order_side == Constants.OrderSide.BUY else (entry_price + delta)
-    return round(trigger_price, price_precision)
+    return token.round_price_to_precision(trigger_price)
 
 
 def calculate_gain_loss(token_qty: float, exit_price: float, entry_price: float) -> float:

@@ -1,3 +1,5 @@
+from typing import Dict
+
 from ccxt.base.exchange import Exchange
 
 from chalicelib.markets.markets import Markets
@@ -44,7 +46,9 @@ class CCXTMarkets(Markets):
 
     def get_current_token_price(self, ticker: str):
         exchange_symbol = self.__get_exchange_ticker_symbol(ticker=ticker)
-        return float(self.ccxt.fetch_ticker(symbol=exchange_symbol)['info']['lastPrice'])
+        ticker_info: Dict = self.ccxt.fetch_ticker(symbol=exchange_symbol)['info']
+        last_price = ticker_info.get('lastPrice') if 'lastPrice' in ticker_info else ticker_info.get('last_price')
+        return float(last_price)
 
     def __get_exchange_ticker_symbol(self, ticker: str):
         return self.ccxt.markets_by_id[ticker]['symbol']

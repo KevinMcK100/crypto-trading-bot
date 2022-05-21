@@ -1,22 +1,27 @@
-import json
+import json, traceback
+from typing import Dict
+
 import pandas
 from binance_f.constant.test import *
 from binance_f.exception.binanceapiexception import BinanceApiException
 from binance_f.model import Position
 from binance_f.model.constant import *
-from ccxt import binance
+from ccxt import bybit, binance
 from chalice import Chalice
 
 from chalicelib import orderutils
 from chalicelib.email import emails
 from chalicelib.constants import Constants
 from chalicelib.exchanges.binanceexchangeclient import BinanceExchangeClient
+from chalicelib.exchanges.bybitexchangeclient import BybitExchangeClient
 from chalicelib.exchanges.dummybinanceexchangeclient import DummyBinanceExchangeClient
+from chalicelib.exchanges.dummybybitexchangeclient import DummyBybitExchangeClient
 from chalicelib.exchanges.exchangeclient import ExchangeClient
 from chalicelib.handlers.webhookhandler import WebhookHandler
 from chalicelib.markets.ccxtmarkets import CCXTMarkets
 from chalicelib.models.orders.slorder import StopLossOrder
 from chalicelib.requests.webhookjsonvalidator import WebhookJsonValidator
+from chalicelib.token import Token
 
 USER_CONFIG_PATH_ENV_VAR = 'USER_CONFIG_PATH'
 EMAIL_ADDRESS_CONFIG_KEY = 'EMAIL_ADDRESS'
@@ -25,7 +30,7 @@ BOT_API_KEY_CONFIG_KEY = 'BOT_API_KEY'
 USER_ID_QUERY_PARAM = 'userId'
 ORDER_ID_PREFIX = "bot_"
 EXIT_ORDER_ID_PREFIX = "bot_exit_"
-EXCHANGES = {"BINANCE": False, "TESTNET": True}
+EXCHANGES = {"BINANCE": False, "TESTNET": True, "BYBIT": False, "BYBIT-TESTNET": True}
 
 app = Chalice(app_name='crypto-trading-bot')
 
@@ -81,14 +86,6 @@ def cancel_all_open_orders(client: ExchangeClient, ticker):
     return False
 
 
-def get_open_position(client: ExchangeClient, ticker: str):
-    open_positions = client.get_position()
-    for open_position in open_positions:
-        if open_position.symbol == ticker.upper():
-            return open_position
-    return None
-
-
 def cancel_open_position(client: ExchangeClient, ticker: str, open_position: Position, token_price: float,
                          quantity_precision: int, entry_price: float = None, price_precision: int = None):
     """
@@ -119,7 +116,7 @@ def is_exit_order(order_type: OrderType):
 
 def cleanup_rogue_open_orders(client: ExchangeClient, ticker: str) -> bool:
     print("Cleaning up rogue open orders on ticker: {}".format(ticker))
-    open_position = get_open_position(client=client, ticker=ticker)
+    open_position = client.get_position_for_ticker(ticker=ticker)
     all_open_orders = client.get_open_orders(ticker=ticker)
     print("Total open orders on ticker: {}".format(len(all_open_orders)))
     bot_open_orders = filter(lambda o: is_bot_order_id(o.clientOrderId), all_open_orders)
@@ -142,26 +139,25 @@ def is_stop_loss_order(order_type: str) -> bool:
     return order_type == "STOP" or order_type == "STOP_MARKET"
 
 
-def move_stop_loss(client, ticker: str) -> bool:
+def move_stop_loss(client: ExchangeClient, token: Token) -> bool:
     print("Attempting to move stop loss")
-    open_position = get_open_position(client=client, ticker=ticker)
+    open_position = client.get_position_for_ticker(ticker=token.ticker)
     open_position_amt = float(open_position.positionAmt)
     print(f"Open position amount: {open_position_amt}")
     if open_position_amt != 0:
-        open_orders = client.get_open_orders(ticker=ticker)
+        open_orders = client.get_open_orders(ticker=token.ticker)
         print(f"All open orders count: {len(open_orders)}")
         stop_loss_orders = filter(lambda o: is_stop_loss_order(o.type), open_orders)
         stop_loss_order_ids = [order.orderId for order in stop_loss_orders]
         print(f"All Stop Loss orders to cancel: {stop_loss_order_ids}")
         if stop_loss_order_ids:
             print("Cancelling Stop Loss orders: {}".format(stop_loss_order_ids))
-            client.cancel_list_orders(ticker, stop_loss_order_ids)
+            client.cancel_list_orders(token.ticker, stop_loss_order_ids)
             stop_loss_side = Constants.OrderSide.SELL if open_position_amt > 0 else Constants.OrderSide.BUY
             sl_trigger = open_position.entryPrice
-            price_precision = client.get_price_precision(ticker=ticker)
-            sl_trigger = round(sl_trigger, price_precision)
+            sl_trigger = token.round_price_to_precision(sl_trigger)
             print("Placing new {} Stop Loss order at: {}".format(stop_loss_side, sl_trigger))
-            stop_order = StopLossOrder(side=stop_loss_side, ticker=ticker, order_id_str="sl_mv",
+            stop_order = StopLossOrder(side=stop_loss_side, ticker=token.ticker, order_id_str="sl_mv",
                                        trigger_price=sl_trigger)
             client.place_order(stop_order)
             return True
@@ -210,12 +206,16 @@ def webhook():
                                     ticker=ticker, order_side=side)
         return {"code": 400, "body": str(e)}
 
-    binance_client = BinanceExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
-    dummy_binance = DummyBinanceExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
-    exchange_client = dummy_binance if payload.get("isDryRun") else binance_client
+    # TODO: Read value from JSON request to determine which exchange client should be used.
+    # exchange_client = BinanceExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
+    # dummy_binance = DummyBinanceExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
+
+    bybit_client = BybitExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
+    dummy_bybit_client = DummyBybitExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
+    exchange_client = dummy_bybit_client if payload.get("isDryRun") else bybit_client
 
     constants = Constants()
-    markets = CCXTMarkets(exchange=binance())
+    markets = CCXTMarkets(exchange=bybit())
     handler = WebhookHandler(payload=payload, exchange_client=exchange_client, constants=constants, markets=markets)
 
     try:
@@ -228,6 +228,7 @@ def webhook():
     except Exception as e:
         print("Error occurred when placing orders. ")
         print(e)
+        traceback.print_exc()
         if should_send_email:
             print('Sending error email to user')
             emails.send_error_email(email_recipient=user_email, heading="Error placing order", err_msg=str(e),
@@ -264,14 +265,18 @@ def exit_trade():
     is_dry_run = bool(payload.get('isDryRun', False))
     print('Is running on testnet platform: {}. Is dry run: {}'.format(is_test_platform, is_dry_run))
 
-    binance_client = BinanceExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
-    dummy_binance = DummyBinanceExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
-    exchange_client = dummy_binance if payload.get("isDryRun") else binance_client
+    # TODO: Read value from JSON request to determine which exchange client should be used.
+    # exchange_client = BinanceExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
+    # dummy_binance = DummyBinanceExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
+
+    bybit_client = BybitExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
+    dummy_bybit_client = DummyBybitExchangeClient(is_test_platform=is_test_platform, user_config=user_config)
+    exchange_client = dummy_bybit_client if payload.get("isDryRun") else bybit_client
 
     ticker = payload.get('ticker', '').upper()
     print('Ticker: {}'.format(ticker))
     open_orders = exchange_client.get_open_orders(ticker=ticker)
-    open_position = get_open_position(exchange_client, ticker)
+    open_position = exchange_client.get_position_for_ticker(ticker=ticker)
     open_position_amt = float(open_position.positionAmt)
     exit_alert_side = payload.get('exitSide', '').upper()
     if not exit_alert_side:
@@ -293,8 +298,9 @@ def exit_trade():
             'message': response
         }
 
-    quantity_precision = exchange_client.get_quantity_precision(ticker=ticker)
-    price_precision = exchange_client.get_price_precision(ticker=ticker)
+    markets = CCXTMarkets(bybit())
+    token = Token(exchange_client=exchange_client, markets=markets, ticker=ticker)
+
     is_take_profit_present = False
     is_tailing_stop_present = False
 
@@ -323,7 +329,6 @@ def exit_trade():
             is_open_orders_cancelled = cancel_all_open_orders(client=exchange_client, ticker=ticker)
     if is_open_position_present:
         print('Exiting open position')
-        markets = CCXTMarkets(binance())
         last_token_price = markets.get_current_token_price(ticker=ticker)
         if is_dry_run:
             is_open_position_cancelled = True
@@ -332,8 +337,8 @@ def exit_trade():
                 is_open_position_cancelled = cancel_open_position(client=exchange_client, ticker=ticker,
                                                                   open_position=open_position,
                                                                   token_price=last_token_price,
-                                                                  quantity_precision=quantity_precision)
-            except BinanceApiException as err:
+                                                                  quantity_precision=token.qty_decimal_places)
+            except Exception as err:
                 print("Error occurred while attempting to cancel open position: {}".format(err.args))
                 return {
                     "code": 400,
@@ -359,8 +364,8 @@ def exit_trade():
                 "isCancelled": is_open_orders_cancelled
             },
             "openPosition": {
-                "amount": f"{round(open_position_amt, quantity_precision)}",
-                "exitPrice": f"${round(last_token_price, price_precision)}",
+                "amount": f"{round(open_position_amt, token.qty_decimal_places)}",
+                "exitPrice": f"${round(last_token_price, token.price_decimal_places)}",
                 "isCancelled": is_open_position_cancelled,
             },
             "isTestPlatform": payload.get('isTestPlatform'),
@@ -388,16 +393,7 @@ def order_update_event():
             'message': 'Authentication Failed!'
         }
 
-    # Ensure we do not process orders unless they are bot orders
-    order = dict(payload.get("order", {}).get("o", {}))
-    if order is None:
-        return {
-            'code': 400,
-            'message': 'Request must include "order" property.'
-        }
-    print("Order: {}".format(order))
-
-    exchange = payload.get("exchange")
+    exchange = str(payload.get("exchange"))
     if exchange not in EXCHANGES:
         return {
             'code': 400,
@@ -406,26 +402,48 @@ def order_update_event():
 
     is_test_exchange = EXCHANGES.get(exchange)
     print("Is from test exchange: {}".format(is_test_exchange))
-    binance_client = BinanceExchangeClient(is_test_platform=is_test_exchange, user_config=user_config)
-    dummy_binance = DummyBinanceExchangeClient(is_test_platform=is_test_exchange, user_config=user_config)
-    exchange_client = dummy_binance if payload.get("isDryRun") else binance_client
+
+    client = None
+    dummy_client = None
+    markets = None
+    order_payload = {}
+    if "BINANCE" in exchange.upper():
+        client = BinanceExchangeClient(is_test_platform=is_test_exchange, user_config=user_config)
+        dummy_client = DummyBinanceExchangeClient(is_test_platform=is_test_exchange, user_config=user_config)
+        markets = CCXTMarkets(binance())
+        order_payload = map_binance_order_payload(payload)
+    elif "BYBIT" in exchange.upper():
+        client = BybitExchangeClient(is_test_platform=is_test_exchange, user_config=user_config)
+        dummy_client = DummyBybitExchangeClient(is_test_platform=is_test_exchange, user_config=user_config)
+        markets = CCXTMarkets(bybit())
+        order_payload = map_bybit_order_payload(payload)
+
+    if len(order_payload) == 0:
+        return {
+            'code': 400,
+            'message': 'Request must include "order" property.'
+        }
+    print("Order: {}".format(order_payload))
+
+    exchange_client = dummy_client if payload.get("isDryRun") else client
 
     is_orders_cancelled = False
-    ticker = order.get("s")
-    order_id = order.get("c", "")
+    ticker = str(order_payload.get("ticker"))
+    order_id = str(order_payload.get("order_id"))
+    order_type = str(order_payload.get("order_type"))
     # When flipping from one side to another we place an order with ID prefix "bot_exit_" to exit the old position.
     # We must avoid cleaning up open orders on this order type, otherwise new DCA open orders for new side will
     # instantly be cancelled.
     if not is_bot_exit_order_id(order_id=order_id):
         is_orders_cancelled = cleanup_rogue_open_orders(client=exchange_client, ticker=ticker)
 
-    order_type = str(order.get("ot"))
     is_stop_loss_moved = False
     if ("PROFIT" in order_type.upper()) and (not is_orders_cancelled):
         print("Take profit order filled. Will attempt to move Stop Loss")
         try:
-            is_stop_loss_moved = move_stop_loss(client=exchange_client, ticker=ticker)
-        except BinanceApiException as err:
+            token = Token(exchange_client, markets, ticker)
+            is_stop_loss_moved = move_stop_loss(client=exchange_client, token=token)
+        except Exception as err:
             print("Error occurred while attempting to move stop loss: {}".format(err.args))
             return {
                 "code": 400,
@@ -438,4 +456,22 @@ def order_update_event():
         "code": 200,
         "body": "Successfully processed request. Open orders cancelled: {}. Stop Loss moved: {}".format(
             is_orders_cancelled, is_stop_loss_moved)
+    }
+
+
+def map_binance_order_payload(payload: Dict):
+    order = dict(payload.get("order", {}).get("o", {}))
+    return {
+        "ticker": order.get("s", ""),
+        "order_id": order.get("c", ""),
+        "order_type": order.get("ot", "")
+    }
+
+
+def map_bybit_order_payload(payload: Dict):
+    order = dict(payload.get("order", {}))
+    return {
+        "ticker": order.get("symbol", ""),
+        "order_id": order.get("order_link_id", ""),
+        "order_type": order.get("create_type", "")
     }

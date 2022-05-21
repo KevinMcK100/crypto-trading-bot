@@ -37,8 +37,8 @@ class ResponseBuilder:
     def build_response(self):
         position_json = self.payload.get(self.POSITION_KEYS.POSITION)
         ticker = position_json.get(self.POSITION_KEYS.TICKER)
-        price_precision = self.token.price_precision
-        qty_precision = self.token.qty_precision
+        price_precision = self.token.price_decimal_places
+        qty_precision = self.token.qty_decimal_places
         interval = self.payload.get(self.KEYS.INTERVAL)
         position = self.__build_position_order(price_precision=price_precision, qty_precision=qty_precision)
         stop_loss = self.__build_stop_loss_order(price_precision=price_precision)

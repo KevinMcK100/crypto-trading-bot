@@ -40,7 +40,7 @@ class PositionOrderFactory(OrderFactory):
 
         portfolio_value = self.account.portfolio_value
         token_price = self.token.token_price
-        qty_precision = self.token.qty_precision
+        qty_precision = self.token.qty_decimal_places
         position_size = self.__calculate_position_size(stake=stake, leverage=leverage, portfolio_value=portfolio_value)
         print(f"Calculated position size: ${position_size}")
 
@@ -96,12 +96,11 @@ class PositionOrderFactory(OrderFactory):
         Each entry's token quantity is calculated based on the dca_percentage values specified.
         """
         atr = self.atr.atr
-        qty_precision = self.token.qty_precision
-        price_precision = self.token.price_precision
+        qty_precision = self.token.qty_decimal_places
         dca_qtys = self._split_quantities(total_qty=token_qty, qty_precision=qty_precision, qty_splits=dca_percentages)
         trigger_prices = [self.__calculate_dca_atr_trigger_price(atr=atr, trigger_atr_multiplier=atr_multiplier,
                                                                  curr_token_price=token_price,
-                                                                 price_precision=price_precision, pos_side=side)
+                                                                 token=self.token, pos_side=side)
                           for atr_multiplier in dca_atr_multipliers]
 
         counter = range(1, len(trigger_prices) + 1)
@@ -117,7 +116,7 @@ class PositionOrderFactory(OrderFactory):
         Builds a collection of position limit orders based on fixed trigger prices specified.
         Each entry's token quantity is calculated based on the dca_percentage values specified.
         """
-        qty_precision = self.token.qty_precision
+        qty_precision = self.token.qty_decimal_places
         dca_qtys = self._split_quantities(total_qty=token_qty, qty_precision=qty_precision, qty_splits=dca_percentages)
         counter = range(1, len(dca_trigger_prices) + 1)
         return [self.__build_dca_order(side=side, ticker=ticker, token_qty=dca_qty, trigger_price=trigger_price,
@@ -127,11 +126,11 @@ class PositionOrderFactory(OrderFactory):
 
     @staticmethod
     def __calculate_dca_atr_trigger_price(atr: float, trigger_atr_multiplier: float, curr_token_price: float,
-                                          price_precision: int, pos_side: Constants.OrderSide) -> float:
-        dca_distance = round(orderutils.calculate_atr_exit_distance(atr=atr, atr_multiplier=trigger_atr_multiplier),
-                             price_precision)
+                                          token: Token, pos_side: Constants.OrderSide) -> float:
+        dca_distance = token.round_price_to_precision(
+            orderutils.calculate_atr_exit_distance(atr=atr, atr_multiplier=trigger_atr_multiplier))
         return orderutils.calculate_stop_loss_trigger_from_delta(
-            entry_price=curr_token_price, price_precision=price_precision, delta=dca_distance, pos_order_side=pos_side)
+            entry_price=curr_token_price, token=token, delta=dca_distance, pos_order_side=pos_side)
 
     @staticmethod
     def __build_dca_order(side: Constants.OrderSide, ticker: str, token_qty: float, trigger_price: float,

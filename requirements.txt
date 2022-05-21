@@ -9,3 +9,5 @@ aws_lambda_powertools
 binance_futures
 pytest
 numpy
+pybit
+inflection

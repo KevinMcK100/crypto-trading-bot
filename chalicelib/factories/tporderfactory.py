@@ -40,8 +40,7 @@ class TakeProfitOrderFactory(OrderFactory):
         fixed_trigger_prices = list(tp_request.get(self.TP_KEYS.TRIGGER_PRICES, []))
         print(f"Take profit fixed trigger prices: {fixed_trigger_prices}")
 
-        price_precision = self.token.price_precision
-        qty_precision = self.token.qty_precision
+        qty_precision = self.token.qty_decimal_places
         entry_price = self.token.token_price
         print(f"Take profit entry price: {entry_price}")
         tp_quantities = self._split_quantities(total_qty=self.token_qty, qty_precision=qty_precision,
@@ -57,7 +56,7 @@ class TakeProfitOrderFactory(OrderFactory):
                 self.__calculate_tp_trigger_price(atr=atr,
                                                   trigger_atr_multiplier=trigger_atr_multiplier[i],
                                                   position_entry_price=entry_price,
-                                                  price_precision=price_precision, tp_side=pos_side)
+                                                  token=self.token, tp_side=pos_side)
             print(f"TP{normalised_idx} trigger price: {tp_trigger_price}")
 
             if use_limit_ord and i < len(limit_atr_multipliers):
@@ -65,7 +64,7 @@ class TakeProfitOrderFactory(OrderFactory):
                 # TODO: check token info and ensure trigger and stop prices are set >= allowed distance apart
                 tp_limit_price = self.__calculate_tp_limit_price(atr=atr, limit_atr_multiplier=limit_atr_multipliers[i],
                                                                  position_entry_price=entry_price,
-                                                                 price_precision=price_precision, tp_side=pos_side)
+                                                                 token=self.token, tp_side=pos_side)
                 order_id_prexif += "_lmt"
                 tp_orders.append(TakeProfitLimitOrder(side=tp_side, ticker=ticker, order_id_str=order_id_prexif,
                                                       token_qty=exit_qty, trigger_price=tp_trigger_price,
@@ -80,19 +79,15 @@ class TakeProfitOrderFactory(OrderFactory):
 
     @staticmethod
     def __calculate_tp_trigger_price(atr: float, trigger_atr_multiplier: float, position_entry_price: float,
-                                     price_precision: int, tp_side: Constants.OrderSide) -> float:
-        tp_distance = round(orderutils.calculate_atr_exit_distance(atr=atr, atr_multiplier=trigger_atr_multiplier),
-                            price_precision)
+                                     token: Token, tp_side: Constants.OrderSide) -> float:
+        tp_distance = token.round_price_to_precision(
+            orderutils.calculate_atr_exit_distance(atr=atr, atr_multiplier=trigger_atr_multiplier))
         return orderutils.calculate_profit_trigger_from_delta(
-            entry_price=position_entry_price, price_precision=price_precision, delta=tp_distance, tp_order_side=tp_side)
+            entry_price=position_entry_price, token=token, delta=tp_distance, tp_order_side=tp_side)
 
     @staticmethod
     def __calculate_tp_limit_price(atr: float, limit_atr_multiplier: float, position_entry_price: float,
-                                   price_precision: int, tp_side: Constants.OrderSide) -> float:
-
-        tp_limit_distance = orderutils.calculate_atr_exit_distance(
-            atr=atr, multiplier=limit_atr_multiplier)
-
-        return orderutils.calculate_profit_trigger_from_delta(
-            entry_price=position_entry_price, price_precision=price_precision,
-            delta=tp_limit_distance, tp_order_side=tp_side)
+                                   token: Token, tp_side: Constants.OrderSide) -> float:
+        tp_limit_distance = orderutils.calculate_atr_exit_distance(atr=atr, multiplier=limit_atr_multiplier)
+        return orderutils.calculate_profit_trigger_from_delta(entry_price=position_entry_price, token=token,
+                                                              delta=tp_limit_distance, tp_order_side=tp_side)
